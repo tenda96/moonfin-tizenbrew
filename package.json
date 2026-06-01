@@ -1,24 +1,27 @@
 {
-  "name": "moonfin-tizenbrew",
-  "version": "2.5.1-debug",
+  "name": "Moonfin",
+  "version": "2.5.2-debug-root",
+  "type": "module",
   "description": "Moonfin client packaged as a TizenBrew application module",
   "packageType": "app",
   "appName": "Moonfin Debug",
   "appPath": "debug.html",
+  "evaluateScriptOnDocumentStart": false,
   "keys": [
-    "MediaPlayPause",
+    "Back",
+    "Return",
     "MediaPlay",
     "MediaPause",
+    "MediaPlayPause",
     "MediaStop",
-    "MediaTrackPrevious",
-    "MediaTrackNext",
-    "MediaRewind",
     "MediaFastForward",
-    "ColorF0Red",
-    "ColorF1Green",
-    "ColorF2Yellow",
-    "ColorF3Blue",
-    "Return",
-    "Exit"
+    "MediaRewind",
+    "MediaTrackPrevious",
+    "MediaTrackNext"
+  ],
+  "files": [
+    "debug.html",
+    "app",
+    "README.md"
   ]
 }
