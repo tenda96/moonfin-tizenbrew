@@ -1,5 +1,5 @@
 {
-  "name": "moonfin-tizenbrew",
+  "name": "moonfin-tizenbrew-debug",
   "version": "0.1.1-debug",
   "type": "module",
   "description": "Moonfin client packaged as a TizenBrew application module",
