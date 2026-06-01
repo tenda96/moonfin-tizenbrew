@@ -1,0 +1,92 @@
+name: Update Moonfin TizenBrew app
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq unzip
+
+      - name: Download latest Moonfin Tizen Regular WGT
+        run: |
+          set -e
+
+          API_URL="https://api.github.com/repos/Moonfin-Client/Smart-TV/releases/latest"
+
+          ASSET_URL="$(curl -s "$API_URL" | jq -r '.assets[] | select(.name | test("Moonfin_Tizen_Regular_.*\\.wgt$")) | .browser_download_url' | head -n 1)"
+          VERSION="$(curl -s "$API_URL" | jq -r '.tag_name')"
+
+          if [ -z "$ASSET_URL" ] || [ "$ASSET_URL" = "null" ]; then
+            echo "No Moonfin Tizen Regular WGT asset found"
+            exit 1
+          fi
+
+          echo "Moonfin version: $VERSION"
+          echo "Asset URL: $ASSET_URL"
+
+          rm -rf app tmp
+          mkdir -p app tmp
+
+          curl -L "$ASSET_URL" -o tmp/moonfin.wgt
+          unzip -q tmp/moonfin.wgt -d app
+
+          echo "$VERSION" > app/MOONFIN_VERSION.txt
+
+      - name: Inject TizenBrew adapter
+        run: |
+          set -e
+
+          if [ ! -f "app/index.html" ]; then
+            echo "app/index.html not found after extracting WGT"
+            find app -maxdepth 3 -type f | sort
+            exit 1
+          fi
+
+          cp tizen-adapter.js app/tizen-adapter.js
+
+          if grep -q "tizen-adapter.js" app/index.html; then
+            echo "Adapter already injected"
+          else
+            sed -i 's#<head>#<head>\n<script src="./tizen-adapter.js"></script>#' app/index.html
+          fi
+
+      - name: Update package version from Moonfin release
+        run: |
+          set -e
+
+          VERSION="$(cat app/MOONFIN_VERSION.txt | sed 's/^v//')"
+
+          jq --arg version "$VERSION" '.version = $version' package.json > package.tmp.json
+          mv package.tmp.json package.json
+
+      - name: Cleanup
+        run: |
+          rm -rf tmp
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add app package.json
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update Moonfin TizenBrew app"
+            git push
+          fi
