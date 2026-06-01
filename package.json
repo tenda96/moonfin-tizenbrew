@@ -1,10 +1,10 @@
 {
   "name": "moonfin-tizenbrew",
-  "version": "2.5.0",
+  "version": "2.5.1-debug",
   "description": "Moonfin client packaged as a TizenBrew application module",
   "packageType": "app",
-  "appName": "Moonfin",
-  "appPath": "app/index.html",
+  "appName": "Moonfin Debug",
+  "appPath": "app/debug.html",
   "keys": [
     "MediaPlayPause",
     "MediaPlay",
