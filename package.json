@@ -4,7 +4,7 @@
   "description": "Moonfin client packaged as a TizenBrew application module",
   "packageType": "app",
   "appName": "Moonfin Debug",
-  "appPath": "app/debug.html",
+  "appPath": "debug.html",
   "keys": [
     "MediaPlayPause",
     "MediaPlay",
