@@ -1,6 +1,6 @@
 {
   "name": "moonfin-tizenbrew",
-  "version": "0.1.0",
+  "version": "2.5.0",
   "description": "Moonfin client packaged as a TizenBrew application module",
   "packageType": "app",
   "appName": "Moonfin",

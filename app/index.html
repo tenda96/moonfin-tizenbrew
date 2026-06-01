@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+	<head>
+<script src="./tizen-adapter.js"></script>
+		<meta charset="UTF-8">
+		<meta http-equiv="x-ua-compatible" content="ie=edge">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
+		<title></title>
+	<link href="main.css" rel="stylesheet"/></head>
+	<body>
+		<div id="root"></div>
+	<script>
+// globalThis polyfill
+(function() {
+	if (typeof globalThis === 'undefined') {
+		if (typeof self !== 'undefined') self.globalThis = self;
+		else if (typeof window !== 'undefined') window.globalThis = window;
+	}
+})();
+</script>
+<script>
+// Intercept non-http(s) XHR on file:// protocol to prevent NetworkError
+(function() {
+	if (location.protocol !== 'file:') return;
+	var OrigOpen = XMLHttpRequest.prototype.open;
+	var OrigSend = XMLHttpRequest.prototype.send;
+	XMLHttpRequest.prototype.open = function(method, url) {
+		if (!url || (url.indexOf('http://') !== 0 && url.indexOf('https://') !== 0)) {
+			this.__xhrMocked = arguments.length < 3 || !!arguments[2];
+			return;
+		}
+		return OrigOpen.apply(this, arguments);
+	};
+	XMLHttpRequest.prototype.send = function() {
+		if (this.__xhrMocked !== undefined) {
+			var isAsync = this.__xhrMocked;
+			delete this.__xhrMocked;
+			var self = this;
+			var fire = function() {
+				try { Object.defineProperty(self, 'readyState', {value: 4, configurable: true}); } catch(e) {}
+				try { Object.defineProperty(self, 'status',     {value: 404, configurable: true}); } catch(e) {}
+				try { Object.defineProperty(self, 'statusText', {value: 'Not Found', configurable: true}); } catch(e) {}
+				try { Object.defineProperty(self, 'responseText', {value: '{}', configurable: true}); } catch(e) {}
+				try { Object.defineProperty(self, 'response',   {value: '{}', configurable: true}); } catch(e) {}
+				try { if (self.onreadystatechange) self.onreadystatechange(); } catch(e) {}
+				try { if (self.onload) self.onload(); } catch(e) {}
+			};
+			if (isAsync) { setTimeout(fire, 0); } else { fire(); }
+			return;
+		}
+		return OrigSend.apply(this, arguments);
+	};
+})();
+</script>
+<script defer="defer" src="main.js"></script></body>
+</html>

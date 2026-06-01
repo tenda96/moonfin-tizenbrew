@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_moonfin_app=self.webpackChunk_moonfin_app||[]).push([[917],{97298:function(n,e,t){t.r(e),t.d(e,{default:function(){return a}});var u=t(99361),i=t(88884),f=t(34864),o=t(9836),r=(0,f.lazy)(function(){return"tizen"===(0,i.uo)()?t.e(135).then(t.bind(t,73007)):t.e(786).then(t.bind(t,22448))}),a=function(n){return(0,o.jsx)(r,(0,u.A)({},n))}}}]);
