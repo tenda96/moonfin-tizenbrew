@@ -1,0 +1,24 @@
+{
+  "name": "moonfin-tizenbrew",
+  "version": "0.1.0",
+  "description": "Moonfin client packaged as a TizenBrew application module",
+  "packageType": "app",
+  "appName": "Moonfin",
+  "appPath": "index.html",
+  "keys": [
+    "MediaPlayPause",
+    "MediaPlay",
+    "MediaPause",
+    "MediaStop",
+    "MediaTrackPrevious",
+    "MediaTrackNext",
+    "MediaRewind",
+    "MediaFastForward",
+    "ColorF0Red",
+    "ColorF1Green",
+    "ColorF2Yellow",
+    "ColorF3Blue",
+    "Return",
+    "Exit"
+  ]
+}
