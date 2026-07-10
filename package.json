@@ -1,15 +1,16 @@
 {
-  "name": "moonfin-tizenbrew-debug",
+  "name": "moonfin-tizenbrew",
   "version": "2.6.0",
   "type": "module",
-  "description": "Moonfin client packaged as a TizenBrew application module",
+  "description": "Moonfin Smart TV packaged as a TizenBrew application module",
   "packageType": "app",
-  "appName": "Moonfin Debug",
-  "appPath": "debug.html",
+  "appName": "Moonfin",
+  "appPath": "app/index.html",
   "evaluateScriptOnDocumentStart": false,
   "keys": [
     "Back",
     "Return",
+    "Exit",
     "MediaPlay",
     "MediaPause",
     "MediaPlayPause",
@@ -17,11 +18,24 @@
     "MediaFastForward",
     "MediaRewind",
     "MediaTrackPrevious",
-    "MediaTrackNext"
+    "MediaTrackNext",
+    "ColorF0Red",
+    "ColorF1Green",
+    "ColorF2Yellow",
+    "ColorF3Blue",
+    "Info",
+    "Search",
+    "ChannelUp",
+    "ChannelDown"
   ],
   "files": [
-    "debug.html",
     "app",
+    "scripts",
+    "tizen-adapter.js",
     "README.md"
-  ]
+  ],
+  "scripts": {
+    "patch:bundle": "node scripts/patch-moonfin-bundle.mjs",
+    "verify": "node scripts/verify-tizenbrew-module.mjs"
+  }
 }

@@ -2,6 +2,14 @@ name: Update Moonfin TizenBrew app
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/update-moonfin.yml"
+      - "scripts/patch-moonfin-bundle.mjs"
+      - "scripts/verify-tizenbrew-module.mjs"
+      - "tizen-adapter.js"
   schedule:
     - cron: "0 4 * * *"
 
@@ -64,6 +72,11 @@ jobs:
             sed -i 's#<head>#<head>\n<script src="./tizen-adapter.js"></script>#' app/index.html
           fi
 
+      - name: Apply TizenBrew bundle patches
+        run: |
+          set -e
+          node scripts/patch-moonfin-bundle.mjs
+
       - name: Update package version from Moonfin release
         run: |
           set -e
@@ -76,6 +89,11 @@ jobs:
       - name: Cleanup
         run: |
           rm -rf tmp
+
+      - name: Verify TizenBrew module
+        run: |
+          set -e
+          node scripts/verify-tizenbrew-module.mjs
 
       - name: Commit changes
         run: |
