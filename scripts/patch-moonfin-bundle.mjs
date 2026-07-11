@@ -19,6 +19,14 @@ const patches = [
   },
   {
     file: "app/main.js",
+    name: "use conservative H.264 playback profile in TizenBrew",
+    original:
+      'case 1:return e.a(2,r.getJellyfinDeviceProfile(n))',
+    patched:
+      'case 1:return e.a(2,"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&r.getH264FallbackProfile?r.getH264FallbackProfile(n).then(function(e){return e.Name="Moonfin TizenBrew H264",e.MaxStreamingBitrate=2e7,e.MaxStaticBitrate=2e7,e.DirectPlayProfiles=[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"},{Container:"mp3,aac,m4a",Type:"Audio"}],e.TranscodingProfiles=[{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],e.ResponseProfiles=[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}],e}):r.getJellyfinDeviceProfile(n))'
+  },
+  {
+    file: "app/main.js",
     name: "use HTML5 video services in TizenBrew",
     original:
       'if("tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(325).then(n.bind(n,88325));',
