@@ -156,6 +156,18 @@ assert(
   "main bundle must route device profile services away from Tizen in TizenBrew"
 );
 assert(
+  mainBundle.includes('window.__MOONFIN_TIZENBREW__&&r.getH264FallbackProfile'),
+  "main bundle must use the conservative H.264 playback profile in TizenBrew"
+);
+assert(
+  mainBundle.includes('e.Name="Moonfin TizenBrew H264"'),
+  "main bundle must label the TizenBrew playback profile"
+);
+assert(
+  mainBundle.includes('e.DirectPlayProfiles=[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"}'),
+  "main bundle must restrict TizenBrew direct play to basic H.264 MP4"
+);
+assert(
   mainBundle.includes('window.__MOONFIN_TIZENBREW__||"tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(325)'),
   "main bundle must route video services away from native Tizen in TizenBrew"
 );
