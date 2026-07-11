@@ -79,9 +79,6 @@ assert(pkg.appPath === "app/index.html", "package.json appPath must point to app
 assert(exists(pkg.appPath), `package.json appPath does not exist: ${pkg.appPath}`);
 
 for (const key of [
-  "Back",
-  "Return",
-  "Exit",
   "MediaPlay",
   "MediaPause",
   "MediaPlayPause",
@@ -89,7 +86,15 @@ for (const key of [
   "MediaFastForward",
   "MediaRewind",
   "MediaTrackPrevious",
-  "MediaTrackNext",
+  "MediaTrackNext"
+]) {
+  assert(pkg.keys.includes(key), `package.json keys is missing ${key}`);
+}
+
+for (const key of [
+  "Back",
+  "Return",
+  "Exit",
   "ColorF0Red",
   "ColorF1Green",
   "ColorF2Yellow",
@@ -99,7 +104,7 @@ for (const key of [
   "ChannelUp",
   "ChannelDown"
 ]) {
-  assert(pkg.keys.includes(key), `package.json keys is missing ${key}`);
+  assert(!pkg.keys.includes(key), `package.json keys should not register ${key} in TizenBrew`);
 }
 
 const indexHtml = readText(pkg.appPath);
