@@ -8,9 +8,6 @@
   "appPath": "app/index.html",
   "evaluateScriptOnDocumentStart": false,
   "keys": [
-    "Back",
-    "Return",
-    "Exit",
     "MediaPlay",
     "MediaPause",
     "MediaPlayPause",
@@ -18,15 +15,7 @@
     "MediaFastForward",
     "MediaRewind",
     "MediaTrackPrevious",
-    "MediaTrackNext",
-    "ColorF0Red",
-    "ColorF1Green",
-    "ColorF2Yellow",
-    "ColorF3Blue",
-    "Info",
-    "Search",
-    "ChannelUp",
-    "ChannelDown"
+    "MediaTrackNext"
   ],
   "files": [
     "app",
