@@ -138,8 +138,8 @@ assert(windowRef.__MOONFIN_TIZENBREW__ === true, "adapter must set __MOONFIN_TIZ
 assert(typeof windowRef.tizen.application.getCurrentApplication === "function", "adapter must expose tizen.application");
 assert(windowRef.tizen.application.getCurrentApplication().appInfo.name === "Moonfin", "adapter appInfo name mismatch");
 assert(
-  windowRef.tizen.systeminfo.getCapability("http://tizen.org/feature/platform.version") === "3.0",
-  "adapter must expose a conservative Tizen platform version"
+  windowRef.tizen.systeminfo.getCapability("http://tizen.org/feature/platform.version") === "5.5",
+  "adapter must expose a supported Tizen platform version"
 );
 
 let displayInfo = null;
@@ -176,6 +176,14 @@ assert(
 assert(
   mainBundle.includes('e.DirectPlayProfiles=[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"}'),
   "main bundle must restrict TizenBrew direct play to basic H.264 MP4"
+);
+assert(
+  mainBundle.includes('e.TranscodingProfiles=[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls"'),
+  "main bundle must request HLS MP4/fMP4 transcoding in TizenBrew"
+);
+assert(
+  mainBundle.includes('g&&"function"===typeof g.appendChild&&("function"!==typeof g.contains||!g.contains(b))&&g.appendChild(b)'),
+  "main bundle must guard trailer preview DOM container access"
 );
 assert(
   mainBundle.includes('window.__MOONFIN_TIZENBREW__||"tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(325)'),
