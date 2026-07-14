@@ -42,6 +42,9 @@
 
   const currentApplication = {
     appInfo: appInfo,
+    getRequestedAppControl: function () {
+      return null;
+    },
     exit: function () {
       console.log("[Moonfin TizenBrew] application.exit() called");
     },
@@ -51,6 +54,20 @@
   };
 
   window.tizen = window.tizen || {};
+
+  defineMissing(window.tizen, {
+    ApplicationControl: function (operation, uri, mime, category, data) {
+      this.operation = operation || "";
+      this.uri = uri || null;
+      this.mime = mime || null;
+      this.category = category || null;
+      this.data = Array.isArray(data) ? data : [];
+    },
+    ApplicationControlData: function (key, value) {
+      this.key = key || "";
+      this.value = Array.isArray(value) ? value : typeof value === "undefined" ? [] : [String(value)];
+    }
+  });
 
   window.tizen.application = window.tizen.application || {};
   defineMissing(window.tizen.application, {
@@ -65,6 +82,14 @@
         successCallback(appInfo);
       }
       return appInfo;
+    },
+    launchAppControl: function () {
+      const successCallback = Array.prototype.find.call(arguments, function (argument) {
+        return typeof argument === "function";
+      });
+      if (typeof successCallback === "function") {
+        setTimeout(successCallback, 0);
+      }
     }
   });
 

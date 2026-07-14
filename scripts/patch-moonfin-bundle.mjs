@@ -68,6 +68,14 @@ const patches = [
       'if("tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(325).then(n.bind(n,88325));',
     patched:
       'if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__||"tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(325).then(n.bind(n,88325));'
+  },
+  {
+    file: "app/chunk.460.js",
+    name: "disable SmartHub updater in TizenBrew",
+    original:
+      'function k(){if("undefined"!==typeof tizen){',
+    patched:
+      'function k(){if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return void u.log("[SmartHub] Disabled in TizenBrew");if("undefined"!==typeof tizen){'
   }
 ];
 

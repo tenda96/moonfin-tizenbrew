@@ -139,13 +139,17 @@ const appDiagnostics = readText("app/tizenbrew-diagnostics.js");
 assert(rootDiagnostics === appDiagnostics, "root and app tizenbrew-diagnostics.js files must stay identical");
 assert(rootDiagnostics.includes("__MOONFIN_TIZENBREW_DIAG__"), "diagnostics must expose __MOONFIN_TIZENBREW_DIAG__");
 assert(rootDiagnostics.includes("playback.info"), "diagnostics must summarize PlaybackInfo responses");
-assert(rootDiagnostics.includes("debug-panel-v5"), "diagnostics must expose the right-side debug panel build label");
+assert(rootDiagnostics.includes("debug-panel-v6"), "diagnostics must expose the right-side debug panel build label");
 assert(rootDiagnostics.includes("== PLAYBACK / MEDIA =="), "diagnostics must prioritize playback/media lines");
+assert(rootDiagnostics.includes("red blocked to avoid overlapping debug panels"), "diagnostics must block red key propagation");
 
 const windowRef = evaluateAdapter(appAdapter);
 assert(windowRef.__MOONFIN_TIZENBREW__ === true, "adapter must set __MOONFIN_TIZENBREW__");
 assert(typeof windowRef.tizen.application.getCurrentApplication === "function", "adapter must expose tizen.application");
 assert(windowRef.tizen.application.getCurrentApplication().appInfo.name === "Moonfin", "adapter appInfo name mismatch");
+assert(typeof windowRef.tizen.ApplicationControl === "function", "adapter must expose ApplicationControl constructor");
+assert(typeof windowRef.tizen.ApplicationControlData === "function", "adapter must expose ApplicationControlData constructor");
+assert(typeof windowRef.tizen.application.launchAppControl === "function", "adapter must expose launchAppControl");
 assert(
   windowRef.tizen.systeminfo.getCapability("http://tizen.org/feature/platform.version") === "5.5",
   "adapter must expose a supported Tizen platform version"
@@ -168,6 +172,12 @@ assert(!("avplay" in windowRef.webapis), "adapter must not fake native AVPlay");
 
 const playerChunk = readText("app/chunk.917.js");
 assert(playerChunk.includes("window.__MOONFIN_TIZENBREW__?t.e(448)"), "player chunk must force HTML5 player in TizenBrew");
+
+const smartHubChunk = readText("app/chunk.460.js");
+assert(
+  smartHubChunk.includes('window.__MOONFIN_TIZENBREW__)return void u.log("[SmartHub] Disabled in TizenBrew")'),
+  "SmartHub updater must be disabled in TizenBrew"
+);
 
 const mainBundle = readText("app/main.js");
 assert(

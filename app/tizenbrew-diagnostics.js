@@ -5,7 +5,7 @@
   if (window.__MOONFIN_TIZENBREW_DIAG__) return;
 
   var STORAGE_KEY = "moonfin_tizenbrew_diagnostics";
-  var BUILD_LABEL = "debug-panel-v5";
+  var BUILD_LABEL = "debug-panel-v6";
   var MAX_LINES = 600;
   var mediaId = 0;
   var sourceBufferId = 0;
@@ -14,6 +14,7 @@
   var watchedMedia = [];
   var lastWatchdogLine = {};
   var mediaUrlPattern = /\/videos\/|\/audio\/|\/items\/[^?#/]+\/playbackinfo|\/playbackinfo|\/sessions\/playing|\/hls|\/stream|\/transcode|\.m3u8(?:[?#]|$)|\.m4s(?:[?#]|$)|\.mp4(?:[?#]|$)|\.ts(?:[?#]|$)|mediasourceid=/i;
+  var trailerApiPattern = /(?:pipedapi|piped\.video|invidious|yewtu|privacyredirect|projectsegfau|moomoo|kavin\.rocks|fdn\.fr)/i;
 
   var originalConsole = {
     log: window.console && window.console.log ? window.console.log.bind(window.console) : function () {},
@@ -85,7 +86,7 @@
   }
 
   function isPriorityLine(line) {
-    return /\[(playback|media|mse|hls|window\.error|promise\.reject|snapshot|diag\.build)/i.test(line) ||
+    return /\[(playback|player|media|mse|hls|window\.error|promise\.reject|snapshot|diag\.build)/i.test(line) ||
       /playbackinfo|\/videos\/|\/audio\/|\.m3u8|\.m4s|\.mp4|sessions\/playing/i.test(line);
   }
 
@@ -144,7 +145,7 @@
     var priorityLines = recentMatching(state.lines, isPriorityLine, priorityCount);
     var visibleLines = state.lines.slice(Math.max(0, state.lines.length - allCount));
     state.body.textContent = [
-      "Moonfin TizenBrew diagnostics " + BUILD_LABEL + " | right panel | yellow toggle | green size | blue snapshot | red clear",
+      "Moonfin TizenBrew diagnostics " + BUILD_LABEL + " | yellow toggle | green size | blue snapshot | red blocked",
       "== PLAYBACK / MEDIA ==",
       priorityLines.length ? priorityLines.join("\n") : "(no playback/media lines yet)",
       "== RECENT ALL ==",
@@ -182,6 +183,7 @@
 
   function shouldLogNetwork(url, status, force) {
     if (force) return true;
+    if (trailerApiPattern.test(safeText(url))) return status === 0 || status >= 400 ? networkCount <= 20 : false;
     if (!isInterestingUrl(url)) return false;
     if (networkCount <= 160) return true;
     if (status === 0 || status >= 400) return true;
@@ -752,21 +754,35 @@
   function patchKeyboard() {
     if (!document || document.__moonfinDiagKeyboard) return;
     document.__moonfinDiagKeyboard = true;
-    document.addEventListener("keydown", function (event) {
+    function claim(event) {
+      try { event.preventDefault(); } catch (e) {}
+      try { event.stopPropagation(); } catch (e) {}
+      try { event.stopImmediatePropagation(); } catch (e) {}
+    }
+    function onKey(event) {
       var key = event.key || "";
       var code = event.keyCode || event.which;
       if (key === "ColorF2Yellow" || code === 405) {
+        claim(event);
         toggleOverlay();
         log("diag.toggle", "overlay " + (state.visible ? "shown" : "hidden"));
       } else if (key === "ColorF1Green" || code === 404) {
+        claim(event);
         toggleExpanded();
       } else if (key === "ColorF3Blue" || code === 406) {
+        claim(event);
         snapshotMedia();
       } else if (key === "ColorF0Red" || code === 403) {
-        state.lines = [];
-        persist();
-        log("diag.clear", "cleared", { show: true });
+        claim(event);
+        log("diag.key", "red blocked to avoid overlapping debug panels", { show: true });
       }
+    }
+    window.addEventListener("keydown", onKey, true);
+    document.addEventListener("keydown", onKey, true);
+    window.addEventListener("keyup", function (event) {
+      var key = event.key || "";
+      var code = event.keyCode || event.which;
+      if (key === "ColorF0Red" || key === "ColorF1Green" || key === "ColorF2Yellow" || key === "ColorF3Blue" || code === 403 || code === 404 || code === 405 || code === 406) claim(event);
     }, true);
   }
 

@@ -39,7 +39,13 @@ Open the diagnostic overlay with the yellow key and look for:
 - `media.watchdog`
 - `fetch.error` or `xhr.error`
 
+`fetch.error` lines for Piped or Invidious usually belong to trailer lookup and are not enough to explain Jellyfin playback failures. The key lines for actual playback are `playback.request`, `playback.info`, `playback.source`, `Player`, `media.src`, and `hls.manifest`.
+
 The most useful screenshot is usually the right-side debug panel after pressing blue once during the loading spinner. Avoid sharing server URLs or account details; the overlay redacts common tokens, but screenshots should still be checked before posting publicly.
+
+## Two debug panels overlap
+
+The module debug panel uses yellow, green, and blue. The red key is blocked by the module because some TizenBrew/runtime setups also use it for their own console overlay, which can overlap the Moonfin diagnostics.
 
 ## Local checks before pushing
 
