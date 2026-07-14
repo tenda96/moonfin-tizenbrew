@@ -109,10 +109,14 @@ for (const key of [
 
 const indexHtml = readText(pkg.appPath);
 const adapterPosition = indexHtml.indexOf("tizen-adapter.js");
+const diagnosticsPosition = indexHtml.indexOf("tizenbrew-diagnostics.js");
 const mainPosition = indexHtml.indexOf("main.js");
 assert(adapterPosition >= 0, "app/index.html must load tizen-adapter.js");
+assert(diagnosticsPosition >= 0, "app/index.html must load tizenbrew-diagnostics.js");
 assert(mainPosition >= 0, "app/index.html must load main.js");
 assert(adapterPosition < mainPosition, "tizen-adapter.js must load before main.js");
+assert(adapterPosition < diagnosticsPosition, "tizen-adapter.js must load before diagnostics");
+assert(diagnosticsPosition < mainPosition, "tizenbrew-diagnostics.js must load before main.js");
 
 for (const ref of findLocalAssetRefs(indexHtml)) {
   const normalized = path.normalize(path.join(path.dirname(pkg.appPath), ref));
@@ -122,6 +126,12 @@ for (const ref of findLocalAssetRefs(indexHtml)) {
 const rootAdapter = readText("tizen-adapter.js");
 const appAdapter = readText("app/tizen-adapter.js");
 assert(rootAdapter === appAdapter, "root and app tizen-adapter.js files must stay identical");
+
+const rootDiagnostics = readText("tizenbrew-diagnostics.js");
+const appDiagnostics = readText("app/tizenbrew-diagnostics.js");
+assert(rootDiagnostics === appDiagnostics, "root and app tizenbrew-diagnostics.js files must stay identical");
+assert(rootDiagnostics.includes("__MOONFIN_TIZENBREW_DIAG__"), "diagnostics must expose __MOONFIN_TIZENBREW_DIAG__");
+assert(rootDiagnostics.includes("playback.info"), "diagnostics must summarize PlaybackInfo responses");
 
 const windowRef = evaluateAdapter(appAdapter);
 assert(windowRef.__MOONFIN_TIZENBREW__ === true, "adapter must set __MOONFIN_TIZENBREW__");

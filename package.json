@@ -21,6 +21,7 @@
     "app",
     "scripts",
     "tizen-adapter.js",
+    "tizenbrew-diagnostics.js",
     "README.md"
   ],
   "scripts": {

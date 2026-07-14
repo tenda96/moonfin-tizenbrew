@@ -10,6 +10,7 @@ on:
       - "scripts/patch-moonfin-bundle.mjs"
       - "scripts/verify-tizenbrew-module.mjs"
       - "tizen-adapter.js"
+      - "tizenbrew-diagnostics.js"
   schedule:
     - cron: "0 4 * * *"
 
@@ -54,7 +55,7 @@ jobs:
 
           echo "$VERSION" > app/MOONFIN_VERSION.txt
 
-      - name: Inject TizenBrew adapter
+      - name: Inject TizenBrew helpers
         run: |
           set -e
 
@@ -65,11 +66,18 @@ jobs:
           fi
 
           cp tizen-adapter.js app/tizen-adapter.js
+          cp tizenbrew-diagnostics.js app/tizenbrew-diagnostics.js
 
           if grep -q "tizen-adapter.js" app/index.html; then
             echo "Adapter already injected"
           else
             sed -i 's#<head>#<head>\n<script src="./tizen-adapter.js"></script>#' app/index.html
+          fi
+
+          if grep -q "tizenbrew-diagnostics.js" app/index.html; then
+            echo "Diagnostics already injected"
+          else
+            sed -i 's#<script src="./tizen-adapter.js"></script>#<script src="./tizen-adapter.js"></script>\n<script src="./tizenbrew-diagnostics.js"></script>#' app/index.html
           fi
 
       - name: Apply TizenBrew bundle patches

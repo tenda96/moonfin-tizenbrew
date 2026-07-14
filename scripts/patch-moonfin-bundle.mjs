@@ -1,5 +1,33 @@
 import fs from "node:fs";
 
+function copyHelperScript(file) {
+  const source = file;
+  const destination = `app/${file}`;
+
+  if (!fs.existsSync(source)) {
+    throw new Error(`${file} not found`);
+  }
+
+  fs.copyFileSync(source, destination);
+}
+
+function injectHelperScript(html, file) {
+  if (html.includes(file)) return html;
+
+  const tag = `\t<script src="./${file}"></script>`;
+  const adapterTag = '<script src="./tizen-adapter.js"></script>';
+
+  if (file === "tizenbrew-diagnostics.js" && html.includes(adapterTag)) {
+    return html.replace(adapterTag, `${adapterTag}\n${tag}`);
+  }
+
+  if (!html.includes("<head>")) {
+    throw new Error("app/index.html does not contain a <head> tag");
+  }
+
+  return html.replace("<head>", `<head>\n${tag}`);
+}
+
 const patches = [
   {
     file: "app/chunk.917.js",
@@ -37,6 +65,30 @@ const patches = [
 
 let applied = 0;
 let unchanged = 0;
+
+const indexFile = "app/index.html";
+if (!fs.existsSync(indexFile)) {
+  throw new Error(`${indexFile} not found`);
+}
+
+for (const helper of ["tizen-adapter.js", "tizenbrew-diagnostics.js"]) {
+  copyHelperScript(helper);
+}
+
+const indexSource = fs.readFileSync(indexFile, "utf8");
+const indexPatched = ["tizen-adapter.js", "tizenbrew-diagnostics.js"].reduce(
+  (html, helper) => injectHelperScript(html, helper),
+  indexSource
+);
+
+if (indexSource === indexPatched) {
+  unchanged += 1;
+  console.log("already patched: TizenBrew helper scripts");
+} else {
+  fs.writeFileSync(indexFile, indexPatched);
+  applied += 1;
+  console.log("patched: TizenBrew helper scripts");
+}
 
 for (const patch of patches) {
   if (!fs.existsSync(patch.file)) {
