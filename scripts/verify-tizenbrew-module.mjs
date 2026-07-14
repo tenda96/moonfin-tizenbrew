@@ -181,12 +181,12 @@ assert(
   "HTML5 player must skip shared decoder wait in TizenBrew"
 );
 assert(
-  html5PlayerChunk.includes('enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode'),
-  "HTML5 player must disable DirectPlay in TizenBrew playback requests"
+  html5PlayerChunk.includes('enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode'),
+  "HTML5 player must prefer TV DirectPlay in TizenBrew playback requests"
 );
 assert(
-  html5PlayerChunk.includes('enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode'),
-  "HTML5 player must disable DirectStream in TizenBrew playback requests"
+  html5PlayerChunk.includes('enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode'),
+  "HTML5 player must prefer TV DirectStream in TizenBrew playback requests"
 );
 assert(
   html5PlayerChunk.includes('enableTranscoding:!0'),
@@ -199,32 +199,36 @@ assert(
   "main bundle must route device profile services away from Tizen in TizenBrew"
 );
 assert(
-  mainBundle.includes('window.__MOONFIN_TIZENBREW__)return e.a(2,{Name:"Moonfin TizenBrew H264 MP4"'),
-  "main bundle must use a static conservative H.264 playback profile in TizenBrew"
+  mainBundle.includes('window.__MOONFIN_TIZENBREW__)return e.a(2,{Name:"Moonfin TizenBrew TV Decode"'),
+  "main bundle must use a static TV decode playback profile in TizenBrew"
 );
 assert(
-  mainBundle.includes('Name:"Moonfin TizenBrew H264 MP4"'),
+  mainBundle.includes('Name:"Moonfin TizenBrew TV Decode"'),
   "main bundle must label the TizenBrew playback profile"
 );
 assert(
-  mainBundle.includes('DirectPlayProfiles:[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"}'),
-  "main bundle must restrict TizenBrew direct play to basic H.264 MP4"
+  mainBundle.includes('DirectPlayProfiles:[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264,hevc,h265",AudioCodec:"aac,mp3,ac3,eac3"}'),
+  "main bundle must advertise common Samsung TV MP4 codecs for DirectPlay"
 );
 assert(
-  mainBundle.includes('TranscodingProfiles:[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"http"'),
-  "main bundle must prefer progressive MP4 transcoding in TizenBrew"
+  mainBundle.includes('{Container:"webm",Type:"Video",VideoCodec:"vp8,vp9",AudioCodec:"vorbis,opus"}'),
+  "main bundle must advertise WebM/VP9 DirectPlay for compatible Samsung TVs"
+);
+assert(
+  mainBundle.includes('TranscodingProfiles:[{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls"'),
+  "main bundle must prefer HLS TS transcoding in TizenBrew"
 );
 assert(
   mainBundle.includes('window.__MOONFIN_TIZENBREW__)return e.a(2,{modelName:"Samsung Smart TV"'),
   "main bundle must use static TizenBrew playback capabilities without webOS probing"
 );
 assert(
-  mainBundle.includes('w=w.replace(/\\/master\\.m3u8/i,"/stream.mp4")'),
-  "main bundle must rewrite TizenBrew HLS transcode URLs to progressive MP4"
+  !mainBundle.includes('w=w.replace(/\\/master\\.m3u8/i,"/stream.mp4")'),
+  "main bundle must not rewrite TizenBrew HLS transcode URLs to progressive MP4"
 );
 assert(
-  mainBundle.includes('TranscodingProtocol=http'),
-  "main bundle must rewrite TizenBrew transcode protocol to HTTP"
+  !mainBundle.includes('TranscodingProtocol=http'),
+  "main bundle must not rewrite TizenBrew transcode protocol to HTTP"
 );
 assert(
   mainBundle.includes('g&&"function"===typeof g.appendChild&&("function"!==typeof g.contains||!g.contains(b))&&g.appendChild(b)'),

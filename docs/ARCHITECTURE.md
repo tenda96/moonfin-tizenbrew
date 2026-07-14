@@ -51,11 +51,26 @@ TizenBrew modules do not get the same native Samsung APIs as an installed Tizen 
 
 - force the HTML5 player when `window.__MOONFIN_TIZENBREW__` is present;
 - avoid native Tizen video services inside TizenBrew;
-- use a conservative H.264/AAC playback profile for TizenBrew;
+- use a static TizenBrew playback profile that prefers TV-side decoding when the Samsung browser can play the media;
+- keep HLS as the fallback transcoding protocol instead of rewriting HLS streams into progressive MP4;
 - guard known DOM operations that can fail on older Samsung WebKit builds;
 - rewrite absolute bundled font paths to local paths.
 
 The verifier checks these patches so an update does not silently drop them.
+
+## Playback strategy and formats
+
+Inside TizenBrew the app runs as a web page, so playback is handled by the HTML5 `<video>` element. The TV decodes media; it does not transcode. Transcoding is always a Jellyfin server-side operation.
+
+The TizenBrew profile is intentionally direct-play first:
+
+- MP4/M4V video: H.264, HEVC/H.265 with AAC, MP3, AC3, or EAC3 audio.
+- WebM video: VP8/VP9 with Vorbis or Opus audio.
+- Audio-only: MP3, AAC/M4A, and FLAC.
+
+If Jellyfin cannot direct play or direct stream the selected media, the profile allows server fallback through HLS TS with H.264 video and AAC audio. This fallback is meant for containers or codecs the Samsung browser cannot open reliably, for example many MKV combinations, unsupported subtitle burn-in cases, or very high bitrate files.
+
+The profile does not advertise every possible container just because Samsung hardware might decode the codec. TizenBrew does not get the same native AVPlay path as an installed WGT, and the browser media element is stricter than the TV hardware decoder.
 
 ## Diagnostics
 

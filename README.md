@@ -36,7 +36,7 @@ The verification checks the TizenBrew manifest, local asset paths, adapter boots
 
 ## Playback Diagnostics
 
-This module includes a temporary TizenBrew playback diagnostic overlay. It stays hidden during normal browsing and appears when playback starts or a media/network error is detected.
+This repository includes a TizenBrew playback diagnostic overlay for debug builds. Normal builds do not load it by default because it can interfere with Samsung remote color-key menus.
 
 During a TV test, start any video and look for lines such as:
 
@@ -56,7 +56,9 @@ Press the yellow remote key to show or hide the overlay. The same log is also sa
 
 TizenBrew loads modules as web pages served from its local server. In that environment a packaged `.wgt` does not get the same Samsung native APIs as an installed Tizen app.
 
-This module injects a small compatibility adapter and forces Moonfin's HTML5 playback path when `window.__MOONFIN_TIZENBREW__` is present. Native Samsung AVPlay remains intentionally unavailable; use the official Moonfin `.wgt` if you need the native AVPlay player.
+This module injects a small compatibility adapter and forces Moonfin's HTML5 playback path when `window.__MOONFIN_TIZENBREW__` is present. The TizenBrew profile prefers TV-side decoding through DirectPlay/DirectStream for MP4/M4V H.264 or HEVC/H.265, common AAC/MP3/AC3/EAC3 audio, and compatible WebM/VP9 media. If the browser cannot play a source directly, Jellyfin can still fall back to HLS server transcoding.
+
+Native Samsung AVPlay remains intentionally unavailable; use the official Moonfin `.wgt` if you need the native AVPlay player.
 
 More context is documented in:
 

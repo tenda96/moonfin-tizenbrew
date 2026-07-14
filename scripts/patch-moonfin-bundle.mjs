@@ -23,6 +23,9 @@ function injectHelperScript(html, file) {
   return html.replace("<head>", `<head>\n${tag}`);
 }
 
+const tizenbrewTvDecodeProfilePatch =
+  'case 0:if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return e.a(2,{Name:"Moonfin TizenBrew TV Decode",MaxStreamingBitrate:5e7,MaxStaticBitrate:5e7,MaxStaticMusicBitrate:4e7,MusicStreamingTranscodingBitrate:384e3,DirectPlayProfiles:[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264,hevc,h265",AudioCodec:"aac,mp3,ac3,eac3"},{Container:"webm",Type:"Video",VideoCodec:"vp8,vp9",AudioCodec:"vorbis,opus"},{Container:"mp3,aac,m4a,flac",Type:"Audio"}],TranscodingProfiles:[{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"2",SegmentLength:"5",BreakOnNonKeyFrames:!1},{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Static"},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],CodecProfiles:[],SubtitleProfiles:[{Format:"vtt",Method:"External"},{Format:"srt",Method:"External"},{Format:"ass",Method:"External"},{Format:"ssa",Method:"External"},{Format:"sub",Method:"Encode"},{Format:"smi",Method:"Encode"},{Format:"ttml",Method:"External"},{Format:"pgssub",Method:"External"},{Format:"dvdsub",Method:"External"},{Format:"dvbsub",Method:"External"}],ResponseProfiles:[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}]});return e.n=1,s();case 1:return e.a(2,r.getJellyfinDeviceProfile(n))';
+
 const patches = [
   {
     file: "app/chunk.917.js",
@@ -42,19 +45,43 @@ const patches = [
   },
   {
     file: "app/main.js",
-    name: "use conservative H.264 MP4 playback profile in TizenBrew",
+    name: "use TV decode playback profile in TizenBrew",
+    optional: true,
     original:
-      'case 1:return e.a(2,r.getJellyfinDeviceProfile(n))',
-    patched:
-      'case 1:return e.a(2,"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&r.getH264FallbackProfile?r.getH264FallbackProfile(n).then(function(e){return e.Name="Moonfin TizenBrew H264 MP4",e.MaxStreamingBitrate=2e7,e.MaxStaticBitrate=2e7,e.DirectPlayProfiles=[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"},{Container:"mp3,aac,m4a",Type:"Audio"}],e.TranscodingProfiles=[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"http",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],e.ResponseProfiles=[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}],e}):r.getJellyfinDeviceProfile(n))'
+      'case 0:return e.n=1,s();case 1:return e.a(2,r.getJellyfinDeviceProfile(n))',
+    patched: tizenbrewTvDecodeProfilePatch
   },
   {
     file: "app/main.js",
-    name: "avoid webOS profile probing during TizenBrew playback",
+    name: "migrate static TizenBrew playback profile from H.264 MP4 to TV Decode",
+    optional: true,
+    originalPattern:
+      /case 0:if\("undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\)return e\.a\(2,\{Name:"Moonfin TizenBrew H264 MP4".*?:r\.getJellyfinDeviceProfile\(n\)\)/,
+    patched: tizenbrewTvDecodeProfilePatch
+  },
+  {
+    file: "app/main.js",
+    name: "remove legacy H.264 fallback after TizenBrew TV Decode profile",
+    optional: true,
+    originalPattern:
+      /case 0:if\("undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\)return e\.a\(2,\{Name:"Moonfin TizenBrew TV Decode".*?:r\.getJellyfinDeviceProfile\(n\)\)/,
+    patched: tizenbrewTvDecodeProfilePatch
+  },
+  {
+    file: "app/main.js",
+    name: "avoid webOS profile probing during TizenBrew HLS playback",
     original:
       'case 0:return e.n=1,s();case 1:return e.a(2,"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&r.getH264FallbackProfile?r.getH264FallbackProfile(n).then(function(e){return e.Name="Moonfin TizenBrew H264 MP4",e.MaxStreamingBitrate=2e7,e.MaxStaticBitrate=2e7,e.DirectPlayProfiles=[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"},{Container:"mp3,aac,m4a",Type:"Audio"}],e.TranscodingProfiles=[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"http",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],e.ResponseProfiles=[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}],e}):r.getJellyfinDeviceProfile(n))',
     patched:
-      'case 0:if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return e.a(2,{Name:"Moonfin TizenBrew H264 MP4",MaxStreamingBitrate:2e7,MaxStaticBitrate:2e7,MaxStaticMusicBitrate:4e7,MusicStreamingTranscodingBitrate:384e3,DirectPlayProfiles:[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"},{Container:"mp3,aac,m4a",Type:"Audio"}],TranscodingProfiles:[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"http",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],CodecProfiles:[],SubtitleProfiles:[{Format:"vtt",Method:"External"},{Format:"srt",Method:"External"},{Format:"ass",Method:"External"},{Format:"ssa",Method:"External"},{Format:"sub",Method:"Encode"},{Format:"smi",Method:"Encode"},{Format:"ttml",Method:"External"},{Format:"pgssub",Method:"External"},{Format:"dvdsub",Method:"External"},{Format:"dvbsub",Method:"External"}],ResponseProfiles:[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}]});return e.n=1,s();case 1:return e.a(2,r.getJellyfinDeviceProfile(n))'
+      'case 0:if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return e.a(2,{Name:"Moonfin TizenBrew TV Decode",MaxStreamingBitrate:5e7,MaxStaticBitrate:5e7,MaxStaticMusicBitrate:4e7,MusicStreamingTranscodingBitrate:384e3,DirectPlayProfiles:[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264,hevc,h265",AudioCodec:"aac,mp3,ac3,eac3"},{Container:"webm",Type:"Video",VideoCodec:"vp8,vp9",AudioCodec:"vorbis,opus"},{Container:"mp3,aac,m4a,flac",Type:"Audio"}],TranscodingProfiles:[{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"2",SegmentLength:"5",BreakOnNonKeyFrames:!1},{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Static"},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],CodecProfiles:[],SubtitleProfiles:[{Format:"vtt",Method:"External"},{Format:"srt",Method:"External"},{Format:"ass",Method:"External"},{Format:"ssa",Method:"External"},{Format:"sub",Method:"Encode"},{Format:"smi",Method:"Encode"},{Format:"ttml",Method:"External"},{Format:"pgssub",Method:"External"},{Format:"dvdsub",Method:"External"},{Format:"dvbsub",Method:"External"}],ResponseProfiles:[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}]});return e.n=1,s();case 1:return e.a(2,r.getJellyfinDeviceProfile(n))'
+  },
+  {
+    file: "app/main.js",
+    name: "migrate static TizenBrew playback profile from MP4 to HLS",
+    original:
+      'case 0:if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return e.a(2,{Name:"Moonfin TizenBrew H264 MP4",MaxStreamingBitrate:5e7,MaxStaticBitrate:5e7,MaxStaticMusicBitrate:4e7,MusicStreamingTranscodingBitrate:384e3,DirectPlayProfiles:[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264,hevc,h265",AudioCodec:"aac,mp3,ac3,eac3"},{Container:"webm",Type:"Video",VideoCodec:"vp8,vp9",AudioCodec:"vorbis,opus"},{Container:"mp3,aac,m4a,flac",Type:"Audio"}],TranscodingProfiles:[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"http",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],CodecProfiles:[],SubtitleProfiles:[{Format:"vtt",Method:"External"},{Format:"srt",Method:"External"},{Format:"ass",Method:"External"},{Format:"ssa",Method:"External"},{Format:"sub",Method:"Encode"},{Format:"smi",Method:"Encode"},{Format:"ttml",Method:"External"},{Format:"pgssub",Method:"External"},{Format:"dvdsub",Method:"External"},{Format:"dvbsub",Method:"External"}],ResponseProfiles:[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}]});return e.n=1,s();case 1:return e.a(2,r.getJellyfinDeviceProfile(n))',
+    patched:
+      'case 0:if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return e.a(2,{Name:"Moonfin TizenBrew TV Decode",MaxStreamingBitrate:5e7,MaxStaticBitrate:5e7,MaxStaticMusicBitrate:4e7,MusicStreamingTranscodingBitrate:384e3,DirectPlayProfiles:[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264,hevc,h265",AudioCodec:"aac,mp3,ac3,eac3"},{Container:"webm",Type:"Video",VideoCodec:"vp8,vp9",AudioCodec:"vorbis,opus"},{Container:"mp3,aac,m4a,flac",Type:"Audio"}],TranscodingProfiles:[{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"2",SegmentLength:"5",BreakOnNonKeyFrames:!1},{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Static"},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],CodecProfiles:[],SubtitleProfiles:[{Format:"vtt",Method:"External"},{Format:"srt",Method:"External"},{Format:"ass",Method:"External"},{Format:"ssa",Method:"External"},{Format:"sub",Method:"Encode"},{Format:"smi",Method:"Encode"},{Format:"ttml",Method:"External"},{Format:"pgssub",Method:"External"},{Format:"dvdsub",Method:"External"},{Format:"dvbsub",Method:"External"}],ResponseProfiles:[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}]});return e.n=1,s();case 1:return e.a(2,r.getJellyfinDeviceProfile(n))'
   },
   {
     file: "app/main.js",
@@ -106,19 +133,27 @@ const patches = [
   },
   {
     file: "app/chunk.448.js",
-    name: "force transcoded HLS playback request in TizenBrew",
+    name: "migrate forced TizenBrew transcode request to TV decode preference",
+    original:
+      'Xl.uF(v.Id,{startPositionTicks:l,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?2e7:gt||R.maxBitrate,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!vi&&R.forceDirectPlay,mediaSourceId:m,audioStreamIndex:null!=p?p:void 0,subtitleStreamIndex:y,item:v,isLiveTV:vi,stereoUpmixEnabled:R.stereoUpmixEnabled})',
+    patched:
+      'Xl.uF(v.Id,{startPositionTicks:l,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?5e7:gt||R.maxBitrate,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!vi&&R.forceDirectPlay,mediaSourceId:m,audioStreamIndex:null!=p?p:void 0,subtitleStreamIndex:y,item:v,isLiveTV:vi,stereoUpmixEnabled:R.stereoUpmixEnabled})'
+  },
+  {
+    file: "app/chunk.448.js",
+    name: "prefer TV decode with HLS fallback in TizenBrew",
     original:
       "Xl.uF(v.Id,{startPositionTicks:l,maxBitrate:gt||R.maxBitrate,enableDirectPlay:!R.preferTranscode,enableDirectStream:!R.preferTranscode,forceDirectPlay:!vi&&R.forceDirectPlay,mediaSourceId:m,audioStreamIndex:null!=p?p:void 0,subtitleStreamIndex:y,item:v,isLiveTV:vi,stereoUpmixEnabled:R.stereoUpmixEnabled})",
     patched:
-      'Xl.uF(v.Id,{startPositionTicks:l,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?2e7:gt||R.maxBitrate,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!vi&&R.forceDirectPlay,mediaSourceId:m,audioStreamIndex:null!=p?p:void 0,subtitleStreamIndex:y,item:v,isLiveTV:vi,stereoUpmixEnabled:R.stereoUpmixEnabled})'
+      'Xl.uF(v.Id,{startPositionTicks:l,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?5e7:gt||R.maxBitrate,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!vi&&R.forceDirectPlay,mediaSourceId:m,audioStreamIndex:null!=p?p:void 0,subtitleStreamIndex:y,item:v,isLiveTV:vi,stereoUpmixEnabled:R.stereoUpmixEnabled})'
   },
   {
     file: "app/main.js",
-    name: "rewrite TizenBrew transcoding URLs to progressive MP4",
+    name: "keep TizenBrew transcoding URLs as HLS",
     original:
-      'if(t.TranscodingUrl){var w=t.TranscodingUrl;w=w.replace(/\\?&/g,"?").replace(/&&/g,"&"),a.stereoUpmixEnabled&&(w+=(w.includes("?")?"&":"?")+"upmix=true");var S=(w=w.replace(/([?&])StartTimeTicks=[^&]*&?/i,"$1").replace(/[?&]$/,"")).startsWith("http")?w:"".concat(s).concat(w);return S.includes("api_key")?S:"".concat(S,"&api_key=").concat(l)}',
+      'if(t.TranscodingUrl){var w=t.TranscodingUrl;w=w.replace(/\\?&/g,"?").replace(/&&/g,"&"),a.stereoUpmixEnabled&&(w+=(w.includes("?")?"&":"?")+"upmix=true"),"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&!i&&(w=w.replace(/\\/master\\.m3u8/i,"/stream.mp4").replace(/([?&])TranscodingProtocol=hls/ig,"$1TranscodingProtocol=http").replace(/([?&])SegmentContainer=[^&]*/ig,"$1Container=mp4").replace(/([?&])MinSegments=[^&]*/ig,"$1").replace(/&&/g,"&"));var S=(w=w.replace(/([?&])StartTimeTicks=[^&]*&?/i,"$1").replace(/[?&]$/,"")).startsWith("http")?w:"".concat(s).concat(w);return S.includes("api_key")?S:"".concat(S,"&api_key=").concat(l)}',
     patched:
-      'if(t.TranscodingUrl){var w=t.TranscodingUrl;w=w.replace(/\\?&/g,"?").replace(/&&/g,"&"),a.stereoUpmixEnabled&&(w+=(w.includes("?")?"&":"?")+"upmix=true"),"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&!i&&(w=w.replace(/\\/master\\.m3u8/i,"/stream.mp4").replace(/([?&])TranscodingProtocol=hls/ig,"$1TranscodingProtocol=http").replace(/([?&])SegmentContainer=[^&]*/ig,"$1Container=mp4").replace(/([?&])MinSegments=[^&]*/ig,"$1").replace(/&&/g,"&"));var S=(w=w.replace(/([?&])StartTimeTicks=[^&]*&?/i,"$1").replace(/[?&]$/,"")).startsWith("http")?w:"".concat(s).concat(w);return S.includes("api_key")?S:"".concat(S,"&api_key=").concat(l)}'
+      'if(t.TranscodingUrl){var w=t.TranscodingUrl;w=w.replace(/\\?&/g,"?").replace(/&&/g,"&"),a.stereoUpmixEnabled&&(w+=(w.includes("?")?"&":"?")+"upmix=true");var S=(w=w.replace(/([?&])StartTimeTicks=[^&]*&?/i,"$1").replace(/[?&]$/,"")).startsWith("http")?w:"".concat(s).concat(w);return S.includes("api_key")?S:"".concat(S,"&api_key=").concat(l)}'
   }
 ];
 
@@ -159,20 +194,32 @@ for (const patch of patches) {
   }
 
   const source = fs.readFileSync(patch.file, "utf8");
+  const hasOriginal = patch.originalPattern
+    ? patch.originalPattern.test(source)
+    : source.includes(patch.original);
 
   if (source.includes(patch.patched)) {
-    if (!source.includes(patch.original)) {
+    if (!hasOriginal) {
       unchanged += 1;
       console.log(`already patched: ${patch.name}`);
       continue;
     }
   }
 
-  if (!source.includes(patch.original)) {
+  if (!hasOriginal && patch.optional) {
+    unchanged += 1;
+    console.log(`not needed: ${patch.name}`);
+    continue;
+  }
+
+  if (!hasOriginal) {
     throw new Error(`${patch.name}: expected bundle pattern was not found`);
   }
 
-  fs.writeFileSync(patch.file, source.replaceAll(patch.original, patch.patched));
+  const patchedSource = patch.originalPattern
+    ? source.replace(patch.originalPattern, patch.patched)
+    : source.replaceAll(patch.original, patch.patched);
+  fs.writeFileSync(patch.file, patchedSource);
   applied += 1;
   console.log(`patched: ${patch.name}`);
 }
