@@ -192,6 +192,22 @@ assert(
   html5PlayerChunk.includes('enableTranscoding:!0'),
   "HTML5 player must explicitly allow transcoding in playback requests"
 );
+assert(
+  html5PlayerChunk.includes('10009===e.keyCode'),
+  "HTML5 player must recognize Samsung/Tizen Back key code"
+);
+assert(
+  html5PlayerChunk.includes('"Back"===t||"BrowserBack"===t'),
+  "HTML5 player must recognize Samsung/Tizen Back key names"
+);
+assert(
+  html5PlayerChunk.includes('10252===e.keyCode'),
+  "HTML5 player must handle Samsung/Tizen MediaPlayPause"
+);
+assert(
+  html5PlayerChunk.includes('("ArrowUp"===t||"ArrowDown"===t||"ArrowLeft"===t||"ArrowRight"===t'),
+  "HTML5 player must reset the controls timeout on remote navigation"
+);
 
 const mainBundle = readText("app/main.js");
 assert(

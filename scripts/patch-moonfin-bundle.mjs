@@ -133,6 +133,22 @@ const patches = [
   },
   {
     file: "app/chunk.448.js",
+    name: "reset player controls timer on TizenBrew remote input",
+    original:
+      "var t=e.key||e.keyCode;if(!$i(e)){if(415===e.keyCode)return",
+    patched:
+      'var t=e.key||e.keyCode;if(!$i(e)){if(!ot&&("ArrowUp"===t||"ArrowDown"===t||"ArrowLeft"===t||"ArrowRight"===t||13===e.keyCode||37===e.keyCode||38===e.keyCode||39===e.keyCode||40===e.keyCode||415===e.keyCode||19===e.keyCode||10252===e.keyCode||417===e.keyCode||412===e.keyCode||413===e.keyCode))Ui();if(10252===e.keyCode)return e.preventDefault(),e.stopPropagation(),void vn();if(415===e.keyCode)return'
+  },
+  {
+    file: "app/chunk.448.js",
+    name: "recognize Samsung Back key in HTML5 player",
+    original:
+      'if("GoBack"===t||"Backspace"===t||461===e.keyCode||8===e.keyCode||27===e.keyCode)return e.preventDefault(),e.stopPropagation(),ot?void yn():it?void Gi():void fn();',
+    patched:
+      'if("GoBack"===t||"Back"===t||"BrowserBack"===t||"Backspace"===t||10009===e.keyCode||461===e.keyCode||8===e.keyCode||27===e.keyCode)return e.preventDefault(),e.stopPropagation(),ot?void yn():it?void Gi():void fn();'
+  },
+  {
+    file: "app/chunk.448.js",
     name: "migrate forced TizenBrew transcode request to TV decode preference",
     optional: true,
     original:
