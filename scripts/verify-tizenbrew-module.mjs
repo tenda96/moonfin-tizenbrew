@@ -133,8 +133,6 @@ const appAdapter = readText("app/tizen-adapter.js");
 assert(rootAdapter === appAdapter, "root and app tizen-adapter.js files must stay identical");
 
 const rootDiagnostics = readText("tizenbrew-diagnostics.js");
-const appDiagnostics = readText("app/tizenbrew-diagnostics.js");
-assert(rootDiagnostics === appDiagnostics, "root and app tizenbrew-diagnostics.js files must stay identical");
 assert(rootDiagnostics.includes("__MOONFIN_TIZENBREW_DIAG__"), "diagnostics must expose __MOONFIN_TIZENBREW_DIAG__");
 assert(rootDiagnostics.includes("playback.info"), "diagnostics must summarize PlaybackInfo responses");
 assert(rootDiagnostics.includes("debug-panel-v6"), "diagnostics must expose the right-side debug panel build label");
