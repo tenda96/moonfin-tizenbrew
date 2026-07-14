@@ -65,7 +65,7 @@ jobs:
             exit 1
           fi
 
-          TIZENBREW_REVISION="2"
+          TIZENBREW_REVISION="3"
 
           cp tizen-adapter.js app/tizen-adapter.js
           cp tizenbrew-diagnostics.js app/tizenbrew-diagnostics.js
@@ -84,10 +84,10 @@ jobs:
           set -e
 
           BASE_VERSION="$(cat app/MOONFIN_VERSION.txt | sed 's/^v//')"
-          TIZENBREW_REVISION="2"
+          TIZENBREW_REVISION="3"
           IFS='.' read -r MAJOR MINOR PATCH_REST <<< "$BASE_VERSION"
           PATCH="${PATCH_REST%%[^0-9]*}"
-          MODULE_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))-tizenbrew.${TIZENBREW_REVISION}"
+          MODULE_VERSION="${MAJOR}.${MINOR}.$((PATCH + TIZENBREW_REVISION))"
 
           jq --arg version "$MODULE_VERSION" '.version = $version' package.json > package.tmp.json
           mv package.tmp.json package.json

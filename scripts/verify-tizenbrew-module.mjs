@@ -124,7 +124,7 @@ for (const ref of findLocalAssetRefs(indexHtml)) {
   assert(exists(normalized), `app/index.html references missing asset: ${ref}`);
 }
 
-assert(/^\d+\.\d+\.\d+-tizenbrew\.\d+$/.test(pkg.version), "package.json version must include a TizenBrew wrapper revision");
+assert(/^\d+\.\d+\.\d+$/.test(pkg.version), "package.json version must be numeric semver for TizenBrew updates");
 assert(indexHtml.includes("tizen-adapter.js?v=tizenbrew-"), "app/index.html must cache-bust tizen-adapter.js");
 assert(indexHtml.includes("tizenbrew-diagnostics.js?v=tizenbrew-"), "app/index.html must cache-bust tizenbrew-diagnostics.js");
 
@@ -137,7 +137,7 @@ const appDiagnostics = readText("app/tizenbrew-diagnostics.js");
 assert(rootDiagnostics === appDiagnostics, "root and app tizenbrew-diagnostics.js files must stay identical");
 assert(rootDiagnostics.includes("__MOONFIN_TIZENBREW_DIAG__"), "diagnostics must expose __MOONFIN_TIZENBREW_DIAG__");
 assert(rootDiagnostics.includes("playback.info"), "diagnostics must summarize PlaybackInfo responses");
-assert(rootDiagnostics.includes("debug-panel-v2"), "diagnostics must expose the right-side debug panel build label");
+assert(rootDiagnostics.includes("debug-panel-v3"), "diagnostics must expose the right-side debug panel build label");
 assert(rootDiagnostics.includes("== PLAYBACK / MEDIA =="), "diagnostics must prioritize playback/media lines");
 
 const windowRef = evaluateAdapter(appAdapter);
@@ -191,6 +191,10 @@ assert(
 assert(
   mainBundle.includes('g&&"function"===typeof g.appendChild&&("function"!==typeof g.contains||!g.contains(b))&&g.appendChild(b)'),
   "main bundle must guard trailer preview DOM container access"
+);
+assert(
+  !mainBundle.includes("g.contains(b)||g.appendChild(b)"),
+  "main bundle must not contain unguarded trailer preview DOM container access"
 );
 assert(
   mainBundle.includes('window.__MOONFIN_TIZENBREW__||"tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(325)'),

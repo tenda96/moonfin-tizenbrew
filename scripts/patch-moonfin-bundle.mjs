@@ -106,16 +106,18 @@ for (const patch of patches) {
   const source = fs.readFileSync(patch.file, "utf8");
 
   if (source.includes(patch.patched)) {
-    unchanged += 1;
-    console.log(`already patched: ${patch.name}`);
-    continue;
+    if (!source.includes(patch.original)) {
+      unchanged += 1;
+      console.log(`already patched: ${patch.name}`);
+      continue;
+    }
   }
 
   if (!source.includes(patch.original)) {
     throw new Error(`${patch.name}: expected bundle pattern was not found`);
   }
 
-  fs.writeFileSync(patch.file, source.replace(patch.original, patch.patched));
+  fs.writeFileSync(patch.file, source.replaceAll(patch.original, patch.patched));
   applied += 1;
   console.log(`patched: ${patch.name}`);
 }
