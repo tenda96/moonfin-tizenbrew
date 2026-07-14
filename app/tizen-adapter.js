@@ -72,7 +72,7 @@
   defineMissing(window.tizen.systeminfo, {
     getCapability: function (capability) {
       const values = {
-        "http://tizen.org/feature/platform.version": "3.0",
+        "http://tizen.org/feature/platform.version": "5.5",
         "http://tizen.org/feature/platform.name": "TizenBrew",
         "http://tizen.org/feature/screen.size.normal.1080.1920": true,
         "http://tizen.org/feature/network.internet": true,
