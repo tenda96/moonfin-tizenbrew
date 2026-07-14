@@ -134,6 +134,7 @@ const patches = [
   {
     file: "app/chunk.448.js",
     name: "migrate forced TizenBrew transcode request to TV decode preference",
+    optional: true,
     original:
       'Xl.uF(v.Id,{startPositionTicks:l,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?2e7:gt||R.maxBitrate,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!vi&&R.forceDirectPlay,mediaSourceId:m,audioStreamIndex:null!=p?p:void 0,subtitleStreamIndex:y,item:v,isLiveTV:vi,stereoUpmixEnabled:R.stereoUpmixEnabled})',
     patched:
