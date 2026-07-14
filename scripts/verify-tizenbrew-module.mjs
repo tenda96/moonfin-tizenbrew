@@ -180,6 +180,18 @@ assert(
   html5PlayerChunk.includes('window.__MOONFIN_TIZENBREW__?Promise.resolve():(0,ru.waitForDecoderRelease)()'),
   "HTML5 player must skip shared decoder wait in TizenBrew"
 );
+assert(
+  html5PlayerChunk.includes('enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode'),
+  "HTML5 player must disable DirectPlay in TizenBrew playback requests"
+);
+assert(
+  html5PlayerChunk.includes('enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode'),
+  "HTML5 player must disable DirectStream in TizenBrew playback requests"
+);
+assert(
+  html5PlayerChunk.includes('enableTranscoding:!0'),
+  "HTML5 player must explicitly allow transcoding in playback requests"
+);
 
 const mainBundle = readText("app/main.js");
 assert(
@@ -191,7 +203,7 @@ assert(
   "main bundle must use the conservative H.264 playback profile in TizenBrew"
 );
 assert(
-  mainBundle.includes('e.Name="Moonfin TizenBrew H264"'),
+  mainBundle.includes('e.Name="Moonfin TizenBrew H264 HLS"'),
   "main bundle must label the TizenBrew playback profile"
 );
 assert(
@@ -199,8 +211,8 @@ assert(
   "main bundle must restrict TizenBrew direct play to basic H.264 MP4"
 );
 assert(
-  mainBundle.includes('e.TranscodingProfiles=[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls"'),
-  "main bundle must request HLS MP4/fMP4 transcoding in TizenBrew"
+  mainBundle.includes('e.TranscodingProfiles=[{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls"'),
+  "main bundle must request HLS MPEG-TS transcoding in TizenBrew"
 );
 assert(
   mainBundle.includes('g&&"function"===typeof g.appendChild&&("function"!==typeof g.contains||!g.contains(b))&&g.appendChild(b)'),

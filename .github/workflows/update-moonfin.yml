@@ -65,7 +65,7 @@ jobs:
             exit 1
           fi
 
-          TIZENBREW_REVISION="8"
+          TIZENBREW_REVISION="9"
 
           cp tizen-adapter.js app/tizen-adapter.js
           sed -i -E '/<script src="\.\/tizen-adapter\.js(\?[^"]*)?"><\/script>/d' app/index.html
@@ -82,7 +82,7 @@ jobs:
           set -e
 
           BASE_VERSION="$(cat app/MOONFIN_VERSION.txt | sed 's/^v//')"
-          TIZENBREW_REVISION="8"
+          TIZENBREW_REVISION="9"
           IFS='.' read -r MAJOR MINOR PATCH_REST <<< "$BASE_VERSION"
           PATCH="${PATCH_REST%%[^0-9]*}"
           MODULE_VERSION="${MAJOR}.${MINOR}.$((PATCH + TIZENBREW_REVISION))"
@@ -123,8 +123,7 @@ jobs:
               package.json \
               app/index.html \
               app/main.js \
-              app/tizen-adapter.js \
-              app/tizenbrew-diagnostics.js
+              app/tizen-adapter.js
             do
               curl -fsS "https://purge.jsdelivr.net/${ref}/${path}"
             done
