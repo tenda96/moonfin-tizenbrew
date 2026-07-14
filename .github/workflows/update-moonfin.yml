@@ -65,20 +65,14 @@ jobs:
             exit 1
           fi
 
+          TIZENBREW_REVISION="2"
+
           cp tizen-adapter.js app/tizen-adapter.js
           cp tizenbrew-diagnostics.js app/tizenbrew-diagnostics.js
 
-          if grep -q "tizen-adapter.js" app/index.html; then
-            echo "Adapter already injected"
-          else
-            sed -i 's#<head>#<head>\n<script src="./tizen-adapter.js"></script>#' app/index.html
-          fi
-
-          if grep -q "tizenbrew-diagnostics.js" app/index.html; then
-            echo "Diagnostics already injected"
-          else
-            sed -i 's#<script src="./tizen-adapter.js"></script>#<script src="./tizen-adapter.js"></script>\n<script src="./tizenbrew-diagnostics.js"></script>#' app/index.html
-          fi
+          sed -i -E '/<script src="\.\/tizen-adapter\.js(\?[^"]*)?"><\/script>/d' app/index.html
+          sed -i -E '/<script src="\.\/tizenbrew-diagnostics\.js(\?[^"]*)?"><\/script>/d' app/index.html
+          sed -i "s#<head>#<head>\n<script src=\"./tizen-adapter.js?v=tizenbrew-${TIZENBREW_REVISION}\"></script>\n<script src=\"./tizenbrew-diagnostics.js?v=tizenbrew-${TIZENBREW_REVISION}\"></script>#" app/index.html
 
       - name: Apply TizenBrew bundle patches
         run: |
@@ -89,9 +83,13 @@ jobs:
         run: |
           set -e
 
-          VERSION="$(cat app/MOONFIN_VERSION.txt | sed 's/^v//')"
+          BASE_VERSION="$(cat app/MOONFIN_VERSION.txt | sed 's/^v//')"
+          TIZENBREW_REVISION="2"
+          IFS='.' read -r MAJOR MINOR PATCH_REST <<< "$BASE_VERSION"
+          PATCH="${PATCH_REST%%[^0-9]*}"
+          MODULE_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))-tizenbrew.${TIZENBREW_REVISION}"
 
-          jq --arg version "$VERSION" '.version = $version' package.json > package.tmp.json
+          jq --arg version "$MODULE_VERSION" '.version = $version' package.json > package.tmp.json
           mv package.tmp.json package.json
 
       - name: Cleanup

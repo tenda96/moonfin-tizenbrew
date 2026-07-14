@@ -119,9 +119,14 @@ assert(adapterPosition < diagnosticsPosition, "tizen-adapter.js must load before
 assert(diagnosticsPosition < mainPosition, "tizenbrew-diagnostics.js must load before main.js");
 
 for (const ref of findLocalAssetRefs(indexHtml)) {
-  const normalized = path.normalize(path.join(path.dirname(pkg.appPath), ref));
+  const cleanRef = ref.split(/[?#]/, 1)[0];
+  const normalized = path.normalize(path.join(path.dirname(pkg.appPath), cleanRef));
   assert(exists(normalized), `app/index.html references missing asset: ${ref}`);
 }
+
+assert(/^\d+\.\d+\.\d+-tizenbrew\.\d+$/.test(pkg.version), "package.json version must include a TizenBrew wrapper revision");
+assert(indexHtml.includes("tizen-adapter.js?v=tizenbrew-"), "app/index.html must cache-bust tizen-adapter.js");
+assert(indexHtml.includes("tizenbrew-diagnostics.js?v=tizenbrew-"), "app/index.html must cache-bust tizenbrew-diagnostics.js");
 
 const rootAdapter = readText("tizen-adapter.js");
 const appAdapter = readText("app/tizen-adapter.js");
@@ -132,6 +137,8 @@ const appDiagnostics = readText("app/tizenbrew-diagnostics.js");
 assert(rootDiagnostics === appDiagnostics, "root and app tizenbrew-diagnostics.js files must stay identical");
 assert(rootDiagnostics.includes("__MOONFIN_TIZENBREW_DIAG__"), "diagnostics must expose __MOONFIN_TIZENBREW_DIAG__");
 assert(rootDiagnostics.includes("playback.info"), "diagnostics must summarize PlaybackInfo responses");
+assert(rootDiagnostics.includes("debug-panel-v2"), "diagnostics must expose the right-side debug panel build label");
+assert(rootDiagnostics.includes("== PLAYBACK / MEDIA =="), "diagnostics must prioritize playback/media lines");
 
 const windowRef = evaluateAdapter(appAdapter);
 assert(windowRef.__MOONFIN_TIZENBREW__ === true, "adapter must set __MOONFIN_TIZENBREW__");

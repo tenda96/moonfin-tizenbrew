@@ -5,6 +5,7 @@
   if (window.__MOONFIN_TIZENBREW_DIAG__) return;
 
   var STORAGE_KEY = "moonfin_tizenbrew_diagnostics";
+  var BUILD_LABEL = "debug-panel-v2";
   var MAX_LINES = 600;
   var mediaId = 0;
   var sourceBufferId = 0;
@@ -83,6 +84,19 @@
     } catch (e) {}
   }
 
+  function isPriorityLine(line) {
+    return /\[(playback|media|mse|hls|window\.error|promise\.reject|snapshot|diag\.build)/i.test(line) ||
+      /playbackinfo|\/videos\/|\/audio\/|\.m3u8|\.m4s|\.mp4|sessions\/playing/i.test(line);
+  }
+
+  function recentMatching(lines, matcher, limit) {
+    var result = [];
+    for (var i = lines.length - 1; i >= 0 && result.length < limit; i -= 1) {
+      if (matcher(lines[i])) result.unshift(lines[i]);
+    }
+    return result;
+  }
+
   function ensureOverlay() {
     if (state.overlay || !window.document || !document.body) return;
 
@@ -91,17 +105,18 @@
     overlay.setAttribute("aria-hidden", "true");
     overlay.style.cssText = [
       "position:fixed",
-      "left:12px",
-      "right:12px",
-      "bottom:10px",
+      "top:0",
+      "right:0",
+      "bottom:0",
+      "width:50vw",
+      "min-width:600px",
       "z-index:2147483647",
-      "max-height:72vh",
-      "padding:10px 12px",
+      "padding:12px 14px",
       "box-sizing:border-box",
-      "background:rgba(0,0,0,.90)",
+      "background:rgba(0,0,0,.94)",
       "color:#eaf4ff",
-      "border:1px solid rgba(255,255,255,.30)",
-      "font:15px/1.28 monospace",
+      "border-left:2px solid rgba(94,210,255,.70)",
+      "font:12px/1.32 monospace",
       "white-space:pre-wrap",
       "overflow:hidden",
       "pointer-events:none",
@@ -110,7 +125,7 @@
     ].join(";");
 
     var body = document.createElement("div");
-    body.style.cssText = "max-height:calc(72vh - 20px);overflow:hidden;";
+    body.style.cssText = "height:calc(100vh - 24px);overflow:hidden;";
     overlay.appendChild(body);
     document.body.appendChild(overlay);
     state.overlay = overlay;
@@ -124,9 +139,17 @@
     state.overlay.style.display = state.visible ? "block" : "none";
     if (!state.visible) return;
 
-    var count = state.expanded ? 52 : 26;
-    var visibleLines = state.lines.slice(Math.max(0, state.lines.length - count));
-    state.body.textContent = "Moonfin TizenBrew diagnostics | yellow toggle | green size | blue snapshot | red clear\n" + visibleLines.join("\n");
+    var priorityCount = state.expanded ? 90 : 42;
+    var allCount = state.expanded ? 120 : 48;
+    var priorityLines = recentMatching(state.lines, isPriorityLine, priorityCount);
+    var visibleLines = state.lines.slice(Math.max(0, state.lines.length - allCount));
+    state.body.textContent = [
+      "Moonfin TizenBrew diagnostics " + BUILD_LABEL + " | right panel | yellow toggle | green size | blue snapshot | red clear",
+      "== PLAYBACK / MEDIA ==",
+      priorityLines.length ? priorityLines.join("\n") : "(no playback/media lines yet)",
+      "== RECENT ALL ==",
+      visibleLines.join("\n")
+    ].join("\n");
   }
 
   function showOverlay() {
@@ -808,6 +831,8 @@
     },
     storageKey: STORAGE_KEY
   };
+
+  log("diag.build", BUILD_LABEL, { show: false });
 
   patchConsole();
   patchErrors();
