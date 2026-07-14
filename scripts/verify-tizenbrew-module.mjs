@@ -199,20 +199,24 @@ assert(
   "main bundle must route device profile services away from Tizen in TizenBrew"
 );
 assert(
-  mainBundle.includes('window.__MOONFIN_TIZENBREW__&&r.getH264FallbackProfile'),
-  "main bundle must use the conservative H.264 playback profile in TizenBrew"
+  mainBundle.includes('window.__MOONFIN_TIZENBREW__)return e.a(2,{Name:"Moonfin TizenBrew H264 MP4"'),
+  "main bundle must use a static conservative H.264 playback profile in TizenBrew"
 );
 assert(
-  mainBundle.includes('e.Name="Moonfin TizenBrew H264 MP4"'),
+  mainBundle.includes('Name:"Moonfin TizenBrew H264 MP4"'),
   "main bundle must label the TizenBrew playback profile"
 );
 assert(
-  mainBundle.includes('e.DirectPlayProfiles=[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"}'),
+  mainBundle.includes('DirectPlayProfiles:[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"}'),
   "main bundle must restrict TizenBrew direct play to basic H.264 MP4"
 );
 assert(
-  mainBundle.includes('e.TranscodingProfiles=[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"http"'),
+  mainBundle.includes('TranscodingProfiles:[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"http"'),
   "main bundle must prefer progressive MP4 transcoding in TizenBrew"
+);
+assert(
+  mainBundle.includes('window.__MOONFIN_TIZENBREW__)return e.a(2,{modelName:"Samsung Smart TV"'),
+  "main bundle must use static TizenBrew playback capabilities without webOS probing"
 );
 assert(
   mainBundle.includes('w=w.replace(/\\/master\\.m3u8/i,"/stream.mp4")'),
@@ -229,6 +233,10 @@ assert(
 assert(
   !mainBundle.includes("g.contains(b)||g.appendChild(b)"),
   "main bundle must not contain unguarded trailer preview DOM container access"
+);
+assert(
+  mainBundle.includes('window.__MOONFIN_TIZENBREW__)return e.a(2,null);if(i=(0,a.Tt)())'),
+  "main bundle must disable SyncPlay API calls in TizenBrew"
 );
 assert(
   mainBundle.includes('window.__MOONFIN_TIZENBREW__||"tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(325)'),
