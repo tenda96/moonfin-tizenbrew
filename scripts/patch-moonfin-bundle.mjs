@@ -51,7 +51,15 @@ const patches = [
     original:
       'case 1:return e.a(2,r.getJellyfinDeviceProfile(n))',
     patched:
-      'case 1:return e.a(2,"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&r.getH264FallbackProfile?r.getH264FallbackProfile(n).then(function(e){return e.Name="Moonfin TizenBrew H264",e.MaxStreamingBitrate=2e7,e.MaxStaticBitrate=2e7,e.DirectPlayProfiles=[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"},{Container:"mp3,aac,m4a",Type:"Audio"}],e.TranscodingProfiles=[{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],e.ResponseProfiles=[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}],e}):r.getJellyfinDeviceProfile(n))'
+      'case 1:return e.a(2,"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&r.getH264FallbackProfile?r.getH264FallbackProfile(n).then(function(e){return e.Name="Moonfin TizenBrew H264",e.MaxStreamingBitrate=2e7,e.MaxStaticBitrate=2e7,e.DirectPlayProfiles=[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"},{Container:"mp3,aac,m4a",Type:"Audio"}],e.TranscodingProfiles=[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],e.ResponseProfiles=[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}],e}):r.getJellyfinDeviceProfile(n))'
+  },
+  {
+    file: "app/main.js",
+    name: "guard trailer preview container in TizenBrew",
+    original:
+      'g.contains(b)||g.appendChild(b)',
+    patched:
+      'g&&"function"===typeof g.appendChild&&("function"!==typeof g.contains||!g.contains(b))&&g.appendChild(b)'
   },
   {
     file: "app/main.js",
