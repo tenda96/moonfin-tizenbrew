@@ -28,7 +28,9 @@ Do not add a query string to `appPath`. TizenBrew builds a local launch URL from
 
 ## The app opens but videos stay on Loading
 
-Open the diagnostic overlay with the yellow key and look for:
+Historical debug builds loaded an on-TV diagnostic overlay. Normal builds do not load it because it can interfere with Samsung remote color-key menus.
+
+If a debug build is enabled, open the diagnostic overlay with the yellow key and look for:
 
 - `playback.request`
 - `playback.info`
@@ -45,7 +47,7 @@ The most useful screenshot is usually the right-side debug panel after pressing 
 
 ## Two debug panels overlap
 
-The module debug panel uses yellow, green, and blue. The red key is blocked by the module because some TizenBrew/runtime setups also use it for their own console overlay, which can overlap the Moonfin diagnostics.
+Normal builds do not load the module debug panel. If a debug build is used, do not block Samsung color keys globally because some remotes need the `123/colors` menu to choose those keys.
 
 ## Local checks before pushing
 

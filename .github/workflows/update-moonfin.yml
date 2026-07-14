@@ -65,14 +65,12 @@ jobs:
             exit 1
           fi
 
-          TIZENBREW_REVISION="6"
+          TIZENBREW_REVISION="7"
 
           cp tizen-adapter.js app/tizen-adapter.js
-          cp tizenbrew-diagnostics.js app/tizenbrew-diagnostics.js
-
           sed -i -E '/<script src="\.\/tizen-adapter\.js(\?[^"]*)?"><\/script>/d' app/index.html
           sed -i -E '/<script src="\.\/tizenbrew-diagnostics\.js(\?[^"]*)?"><\/script>/d' app/index.html
-          sed -i "s#<head>#<head>\n<script src=\"./tizen-adapter.js?v=tizenbrew-${TIZENBREW_REVISION}\"></script>\n<script src=\"./tizenbrew-diagnostics.js?v=tizenbrew-${TIZENBREW_REVISION}\"></script>#" app/index.html
+          sed -i "s#<head>#<head>\n<script src=\"./tizen-adapter.js?v=tizenbrew-${TIZENBREW_REVISION}\"></script>#" app/index.html
 
       - name: Apply TizenBrew bundle patches
         run: |
@@ -84,7 +82,7 @@ jobs:
           set -e
 
           BASE_VERSION="$(cat app/MOONFIN_VERSION.txt | sed 's/^v//')"
-          TIZENBREW_REVISION="6"
+          TIZENBREW_REVISION="7"
           IFS='.' read -r MAJOR MINOR PATCH_REST <<< "$BASE_VERSION"
           PATCH="${PATCH_REST%%[^0-9]*}"
           MODULE_VERSION="${MAJOR}.${MINOR}.$((PATCH + TIZENBREW_REVISION))"

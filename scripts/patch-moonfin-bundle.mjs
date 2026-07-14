@@ -15,11 +15,6 @@ function injectHelperScript(html, file) {
   if (html.includes(file)) return html;
 
   const tag = `\t<script src="./${file}"></script>`;
-  const adapterTag = '<script src="./tizen-adapter.js"></script>';
-
-  if (file === "tizenbrew-diagnostics.js" && html.includes(adapterTag)) {
-    return html.replace(adapterTag, `${adapterTag}\n${tag}`);
-  }
 
   if (!html.includes("<head>")) {
     throw new Error("app/index.html does not contain a <head> tag");
@@ -76,6 +71,14 @@ const patches = [
       'function k(){if("undefined"!==typeof tizen){',
     patched:
       'function k(){if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return void u.log("[SmartHub] Disabled in TizenBrew");if("undefined"!==typeof tizen){'
+  },
+  {
+    file: "app/chunk.448.js",
+    name: "skip shared decoder wait in TizenBrew",
+    original:
+      "(0,ru.waitForDecoderRelease)()",
+    patched:
+      '("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?Promise.resolve():(0,ru.waitForDecoderRelease)())'
   }
 ];
 
@@ -87,14 +90,18 @@ if (!fs.existsSync(indexFile)) {
   throw new Error(`${indexFile} not found`);
 }
 
-for (const helper of ["tizen-adapter.js", "tizenbrew-diagnostics.js"]) {
+for (const helper of ["tizen-adapter.js"]) {
   copyHelperScript(helper);
 }
 
 const indexSource = fs.readFileSync(indexFile, "utf8");
-const indexPatched = ["tizen-adapter.js", "tizenbrew-diagnostics.js"].reduce(
+const indexWithoutDiagnostics = indexSource.replace(
+  /\s*<script src="\.\/tizenbrew-diagnostics\.js(?:\?[^"]*)?"><\/script>/g,
+  ""
+);
+const indexPatched = ["tizen-adapter.js"].reduce(
   (html, helper) => injectHelperScript(html, helper),
-  indexSource
+  indexWithoutDiagnostics
 );
 
 if (indexSource === indexPatched) {

@@ -114,11 +114,9 @@ const adapterPosition = indexHtml.indexOf("tizen-adapter.js");
 const diagnosticsPosition = indexHtml.indexOf("tizenbrew-diagnostics.js");
 const mainPosition = indexHtml.indexOf("main.js");
 assert(adapterPosition >= 0, "app/index.html must load tizen-adapter.js");
-assert(diagnosticsPosition >= 0, "app/index.html must load tizenbrew-diagnostics.js");
+assert(diagnosticsPosition === -1, "app/index.html must not load the diagnostics overlay in normal builds");
 assert(mainPosition >= 0, "app/index.html must load main.js");
 assert(adapterPosition < mainPosition, "tizen-adapter.js must load before main.js");
-assert(adapterPosition < diagnosticsPosition, "tizen-adapter.js must load before diagnostics");
-assert(diagnosticsPosition < mainPosition, "tizenbrew-diagnostics.js must load before main.js");
 
 for (const ref of findLocalAssetRefs(indexHtml)) {
   const cleanRef = ref.split(/[?#]/, 1)[0];
@@ -128,7 +126,7 @@ for (const ref of findLocalAssetRefs(indexHtml)) {
 
 assert(/^\d+\.\d+\.\d+$/.test(pkg.version), "package.json version must be numeric semver for TizenBrew updates");
 assert(indexHtml.includes("tizen-adapter.js?v=tizenbrew-"), "app/index.html must cache-bust tizen-adapter.js");
-assert(indexHtml.includes("tizenbrew-diagnostics.js?v=tizenbrew-"), "app/index.html must cache-bust tizenbrew-diagnostics.js");
+assert(!indexHtml.includes("tizenbrew-diagnostics.js?v=tizenbrew-"), "app/index.html must not load diagnostics by default");
 
 const rootAdapter = readText("tizen-adapter.js");
 const appAdapter = readText("app/tizen-adapter.js");
@@ -177,6 +175,12 @@ const smartHubChunk = readText("app/chunk.460.js");
 assert(
   smartHubChunk.includes('window.__MOONFIN_TIZENBREW__)return void u.log("[SmartHub] Disabled in TizenBrew")'),
   "SmartHub updater must be disabled in TizenBrew"
+);
+
+const html5PlayerChunk = readText("app/chunk.448.js");
+assert(
+  html5PlayerChunk.includes('window.__MOONFIN_TIZENBREW__?Promise.resolve():(0,ru.waitForDecoderRelease)()'),
+  "HTML5 player must skip shared decoder wait in TizenBrew"
 );
 
 const mainBundle = readText("app/main.js");
