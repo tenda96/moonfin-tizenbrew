@@ -1,11 +1,11 @@
 {
   "name": "moonfin-tizenbrew",
-  "version": "2.6.4",
+  "version": "2.6.5",
   "type": "module",
   "description": "Moonfin Smart TV packaged as a TizenBrew application module",
   "packageType": "app",
   "appName": "Moonfin",
-  "appPath": "app/index.html?tbv=2.6.4",
+  "appPath": "app/index.html",
   "evaluateScriptOnDocumentStart": false,
   "keys": [
     "MediaPlay",
@@ -22,7 +22,8 @@
     "scripts",
     "tizen-adapter.js",
     "tizenbrew-diagnostics.js",
-    "README.md"
+    "README.md",
+    "docs"
   ],
   "scripts": {
     "patch:bundle": "node scripts/patch-moonfin-bundle.mjs",

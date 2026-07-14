@@ -11,10 +11,14 @@ This repository repackages the official Moonfin Tizen `.wgt` release as a TizenB
 3. Enter:
 
 ```text
-tenda96/moonfin-tizenbrew
+tenda96/moonfin-tizenbrew@main
 ```
 
-TizenBrew stores GitHub modules internally as `gh/tenda96/moonfin-tizenbrew`. Do not enter `gh:tenda96/moonfin-tizenbrew`; that is not the jsDelivr path TizenBrew resolves.
+TizenBrew stores GitHub modules internally as `gh/tenda96/moonfin-tizenbrew@main`. Do not enter `gh:tenda96/moonfin-tizenbrew`; that is not the jsDelivr path TizenBrew resolves.
+
+Using `@main` is intentional. TizenBrew downloads GitHub modules through jsDelivr, and the unpinned path can keep stale files for longer than expected. If a test needs a completely fixed build, use a full commit SHA instead of `main`.
+
+If TizenBrew still shows an old version, remove the module, restart TizenBrew, and add `tenda96/moonfin-tizenbrew@main` again.
 
 ## Local Verification
 
@@ -53,6 +57,11 @@ Press the yellow remote key to show or hide the overlay. The same log is also sa
 TizenBrew loads modules as web pages served from its local server. In that environment a packaged `.wgt` does not get the same Samsung native APIs as an installed Tizen app.
 
 This module injects a small compatibility adapter and forces Moonfin's HTML5 playback path when `window.__MOONFIN_TIZENBREW__` is present. Native Samsung AVPlay remains intentionally unavailable; use the official Moonfin `.wgt` if you need the native AVPlay player.
+
+More context is documented in:
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ## Update Flow
 
