@@ -42,11 +42,11 @@ const patches = [
   },
   {
     file: "app/main.js",
-    name: "use conservative H.264 HLS playback profile in TizenBrew",
+    name: "use conservative H.264 MP4 playback profile in TizenBrew",
     original:
       'case 1:return e.a(2,r.getJellyfinDeviceProfile(n))',
     patched:
-      'case 1:return e.a(2,"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&r.getH264FallbackProfile?r.getH264FallbackProfile(n).then(function(e){return e.Name="Moonfin TizenBrew H264 HLS",e.MaxStreamingBitrate=2e7,e.MaxStaticBitrate=2e7,e.DirectPlayProfiles=[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"},{Container:"mp3,aac,m4a",Type:"Audio"}],e.TranscodingProfiles=[{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],e.ResponseProfiles=[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}],e}):r.getJellyfinDeviceProfile(n))'
+      'case 1:return e.a(2,"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&r.getH264FallbackProfile?r.getH264FallbackProfile(n).then(function(e){return e.Name="Moonfin TizenBrew H264 MP4",e.MaxStreamingBitrate=2e7,e.MaxStaticBitrate=2e7,e.DirectPlayProfiles=[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"},{Container:"mp3,aac,m4a",Type:"Audio"}],e.TranscodingProfiles=[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"http",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],e.ResponseProfiles=[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}],e}):r.getJellyfinDeviceProfile(n))'
   },
   {
     file: "app/main.js",
@@ -87,6 +87,14 @@ const patches = [
       "Xl.uF(v.Id,{startPositionTicks:l,maxBitrate:gt||R.maxBitrate,enableDirectPlay:!R.preferTranscode,enableDirectStream:!R.preferTranscode,forceDirectPlay:!vi&&R.forceDirectPlay,mediaSourceId:m,audioStreamIndex:null!=p?p:void 0,subtitleStreamIndex:y,item:v,isLiveTV:vi,stereoUpmixEnabled:R.stereoUpmixEnabled})",
     patched:
       'Xl.uF(v.Id,{startPositionTicks:l,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?2e7:gt||R.maxBitrate,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!R.preferTranscode,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!vi&&R.forceDirectPlay,mediaSourceId:m,audioStreamIndex:null!=p?p:void 0,subtitleStreamIndex:y,item:v,isLiveTV:vi,stereoUpmixEnabled:R.stereoUpmixEnabled})'
+  },
+  {
+    file: "app/main.js",
+    name: "rewrite TizenBrew transcoding URLs to progressive MP4",
+    original:
+      'if(t.TranscodingUrl){var w=t.TranscodingUrl;w=w.replace(/\\?&/g,"?").replace(/&&/g,"&"),a.stereoUpmixEnabled&&(w+=(w.includes("?")?"&":"?")+"upmix=true");var S=(w=w.replace(/([?&])StartTimeTicks=[^&]*&?/i,"$1").replace(/[?&]$/,"")).startsWith("http")?w:"".concat(s).concat(w);return S.includes("api_key")?S:"".concat(S,"&api_key=").concat(l)}',
+    patched:
+      'if(t.TranscodingUrl){var w=t.TranscodingUrl;w=w.replace(/\\?&/g,"?").replace(/&&/g,"&"),a.stereoUpmixEnabled&&(w+=(w.includes("?")?"&":"?")+"upmix=true"),"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&!i&&(w=w.replace(/\\/master\\.m3u8/i,"/stream.mp4").replace(/([?&])TranscodingProtocol=hls/ig,"$1TranscodingProtocol=http").replace(/([?&])SegmentContainer=[^&]*/ig,"$1Container=mp4").replace(/([?&])MinSegments=[^&]*/ig,"$1").replace(/&&/g,"&"));var S=(w=w.replace(/([?&])StartTimeTicks=[^&]*&?/i,"$1").replace(/[?&]$/,"")).startsWith("http")?w:"".concat(s).concat(w);return S.includes("api_key")?S:"".concat(S,"&api_key=").concat(l)}'
   }
 ];
 

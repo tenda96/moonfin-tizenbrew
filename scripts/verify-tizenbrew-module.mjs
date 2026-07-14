@@ -203,7 +203,7 @@ assert(
   "main bundle must use the conservative H.264 playback profile in TizenBrew"
 );
 assert(
-  mainBundle.includes('e.Name="Moonfin TizenBrew H264 HLS"'),
+  mainBundle.includes('e.Name="Moonfin TizenBrew H264 MP4"'),
   "main bundle must label the TizenBrew playback profile"
 );
 assert(
@@ -211,8 +211,16 @@ assert(
   "main bundle must restrict TizenBrew direct play to basic H.264 MP4"
 );
 assert(
-  mainBundle.includes('e.TranscodingProfiles=[{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls"'),
-  "main bundle must request HLS MPEG-TS transcoding in TizenBrew"
+  mainBundle.includes('e.TranscodingProfiles=[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"http"'),
+  "main bundle must prefer progressive MP4 transcoding in TizenBrew"
+);
+assert(
+  mainBundle.includes('w=w.replace(/\\/master\\.m3u8/i,"/stream.mp4")'),
+  "main bundle must rewrite TizenBrew HLS transcode URLs to progressive MP4"
+);
+assert(
+  mainBundle.includes('TranscodingProtocol=http'),
+  "main bundle must rewrite TizenBrew transcode protocol to HTTP"
 );
 assert(
   mainBundle.includes('g&&"function"===typeof g.appendChild&&("function"!==typeof g.contains||!g.contains(b))&&g.appendChild(b)'),
