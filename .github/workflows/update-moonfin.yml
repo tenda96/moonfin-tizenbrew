@@ -65,7 +65,7 @@ jobs:
             exit 1
           fi
 
-          TIZENBREW_REVISION="3"
+          TIZENBREW_REVISION="4"
 
           cp tizen-adapter.js app/tizen-adapter.js
           cp tizenbrew-diagnostics.js app/tizenbrew-diagnostics.js
@@ -84,12 +84,12 @@ jobs:
           set -e
 
           BASE_VERSION="$(cat app/MOONFIN_VERSION.txt | sed 's/^v//')"
-          TIZENBREW_REVISION="3"
+          TIZENBREW_REVISION="4"
           IFS='.' read -r MAJOR MINOR PATCH_REST <<< "$BASE_VERSION"
           PATCH="${PATCH_REST%%[^0-9]*}"
           MODULE_VERSION="${MAJOR}.${MINOR}.$((PATCH + TIZENBREW_REVISION))"
 
-          jq --arg version "$MODULE_VERSION" '.version = $version' package.json > package.tmp.json
+          jq --arg version "$MODULE_VERSION" --arg appPath "app/index.html?tbv=$MODULE_VERSION" '.version = $version | .appPath = $appPath' package.json > package.tmp.json
           mv package.tmp.json package.json
 
       - name: Cleanup
@@ -114,3 +114,17 @@ jobs:
             git commit -m "Update Moonfin TizenBrew app"
             git push
           fi
+
+      - name: Purge jsDelivr cache
+        run: |
+          set -e
+
+          for path in \
+            package.json \
+            app/index.html \
+            app/main.js \
+            app/tizen-adapter.js \
+            app/tizenbrew-diagnostics.js
+          do
+            curl -fsS "https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}/${path}"
+          done

@@ -5,7 +5,7 @@
   if (window.__MOONFIN_TIZENBREW_DIAG__) return;
 
   var STORAGE_KEY = "moonfin_tizenbrew_diagnostics";
-  var BUILD_LABEL = "debug-panel-v3";
+  var BUILD_LABEL = "debug-panel-v4";
   var MAX_LINES = 600;
   var mediaId = 0;
   var sourceBufferId = 0;

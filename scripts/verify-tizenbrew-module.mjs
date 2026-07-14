@@ -73,10 +73,12 @@ function evaluateAdapter(source) {
 }
 
 const pkg = JSON.parse(readText("package.json"));
+const appPathFile = pkg.appPath.split(/[?#]/, 1)[0];
 assert(pkg.packageType === "app", "package.json must declare packageType=app");
 assert(pkg.appName === "Moonfin", "package.json appName must be Moonfin");
-assert(pkg.appPath === "app/index.html", "package.json appPath must point to app/index.html");
-assert(exists(pkg.appPath), `package.json appPath does not exist: ${pkg.appPath}`);
+assert(appPathFile === "app/index.html", "package.json appPath must point to app/index.html");
+assert(pkg.appPath.includes("?tbv="), "package.json appPath must cache-bust app/index.html");
+assert(exists(appPathFile), `package.json appPath does not exist: ${pkg.appPath}`);
 
 for (const key of [
   "MediaPlay",
@@ -107,7 +109,7 @@ for (const key of [
   assert(!pkg.keys.includes(key), `package.json keys should not register ${key} in TizenBrew`);
 }
 
-const indexHtml = readText(pkg.appPath);
+const indexHtml = readText(appPathFile);
 const adapterPosition = indexHtml.indexOf("tizen-adapter.js");
 const diagnosticsPosition = indexHtml.indexOf("tizenbrew-diagnostics.js");
 const mainPosition = indexHtml.indexOf("main.js");
@@ -137,7 +139,7 @@ const appDiagnostics = readText("app/tizenbrew-diagnostics.js");
 assert(rootDiagnostics === appDiagnostics, "root and app tizenbrew-diagnostics.js files must stay identical");
 assert(rootDiagnostics.includes("__MOONFIN_TIZENBREW_DIAG__"), "diagnostics must expose __MOONFIN_TIZENBREW_DIAG__");
 assert(rootDiagnostics.includes("playback.info"), "diagnostics must summarize PlaybackInfo responses");
-assert(rootDiagnostics.includes("debug-panel-v3"), "diagnostics must expose the right-side debug panel build label");
+assert(rootDiagnostics.includes("debug-panel-v4"), "diagnostics must expose the right-side debug panel build label");
 assert(rootDiagnostics.includes("== PLAYBACK / MEDIA =="), "diagnostics must prioritize playback/media lines");
 
 const windowRef = evaluateAdapter(appAdapter);

@@ -1,11 +1,11 @@
 {
   "name": "moonfin-tizenbrew",
-  "version": "2.6.3",
+  "version": "2.6.4",
   "type": "module",
   "description": "Moonfin Smart TV packaged as a TizenBrew application module",
   "packageType": "app",
   "appName": "Moonfin",
-  "appPath": "app/index.html",
+  "appPath": "app/index.html?tbv=2.6.4",
   "evaluateScriptOnDocumentStart": false,
   "keys": [
     "MediaPlay",
