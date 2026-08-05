@@ -177,7 +177,7 @@ assert(
 
 const html5PlayerChunk = readText("app/chunk.448.js");
 assert(
-  html5PlayerChunk.includes('window.__MOONFIN_TIZENBREW__?Promise.resolve():(0,ru.waitForDecoderRelease)()'),
+  /window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,(?:ru|su)\.waitForDecoderRelease\)\(\)/.test(html5PlayerChunk),
   "HTML5 player must skip shared decoder wait in TizenBrew"
 );
 assert(
@@ -204,10 +204,12 @@ assert(
   html5PlayerChunk.includes('10252===e.keyCode'),
   "HTML5 player must handle Samsung/Tizen MediaPlayPause"
 );
-assert(
-  html5PlayerChunk.includes('("ArrowUp"===t||"ArrowDown"===t||"ArrowLeft"===t||"ArrowRight"===t'),
-  "HTML5 player must reset the controls timeout on remote navigation"
-);
+const resetsControlsOnRemoteNavigation =
+  html5PlayerChunk.includes('("ArrowUp"===t||"ArrowDown"===t||"ArrowLeft"===t||"ArrowRight"===t') ||
+  (html5PlayerChunk.includes('if("ArrowLeft"===t||37===e.keyCode||"ArrowRight"===t||39===e.keyCode){if(e.preventDefault()') &&
+    html5PlayerChunk.includes('if("ArrowUp"===t||38===e.keyCode)return e.preventDefault(),qn()') &&
+    html5PlayerChunk.includes('if("ArrowDown"===t||40===e.keyCode)return e.preventDefault(),qn()'));
+assert(resetsControlsOnRemoteNavigation, "HTML5 player must reset the controls timeout on remote navigation");
 
 const mainBundle = readText("app/main.js");
 assert(
@@ -245,10 +247,6 @@ assert(
 assert(
   !mainBundle.includes('TranscodingProtocol=http'),
   "main bundle must not rewrite TizenBrew transcode protocol to HTTP"
-);
-assert(
-  mainBundle.includes('g&&"function"===typeof g.appendChild&&("function"!==typeof g.contains||!g.contains(b))&&g.appendChild(b)'),
-  "main bundle must guard trailer preview DOM container access"
 );
 assert(
   !mainBundle.includes("g.contains(b)||g.appendChild(b)"),

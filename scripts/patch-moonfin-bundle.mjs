@@ -30,10 +30,12 @@ const patches = [
   {
     file: "app/chunk.917.js",
     name: "force HTML5 player in TizenBrew",
-    original:
-      'return"tizen"===(0,i.uo)()?t.e(7).then(t.bind(t,73007)):t.e(448).then(t.bind(t,22448))',
+    originalPattern:
+      /return("tizen"===\(0,i\.uo\)\(\)\?t\.e\(\d+\)\.then\(t\.bind\(t,\d+\)\):t\.e\(448\)\.then\(t\.bind\(t,22448\)\))/,
     patched:
-      'return"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?t.e(448).then(t.bind(t,22448)):"tizen"===(0,i.uo)()?t.e(7).then(t.bind(t,73007)):t.e(448).then(t.bind(t,22448))'
+      'return"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?t.e(448).then(t.bind(t,22448)):$1',
+    patchedPattern:
+      /return"undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?t\.e\(448\)\.then\(t\.bind\(t,22448\)\):"tizen"===\(0,i\.uo\)\(\)\?t\.e\(\d+\)\.then\(t\.bind\(t,\d+\)\):t\.e\(448\)\.then\(t\.bind\(t,22448\)\)/
   },
   {
     file: "app/main.js",
@@ -94,6 +96,7 @@ const patches = [
   {
     file: "app/main.js",
     name: "guard trailer preview container in TizenBrew",
+    optional: true,
     original:
       'g.contains(b)||g.appendChild(b)',
     patched:
@@ -126,14 +129,17 @@ const patches = [
   {
     file: "app/chunk.448.js",
     name: "skip shared decoder wait in TizenBrew",
-    original:
-      "e.n=1,(0,ru.waitForDecoderRelease)();case 1:return e.p=1",
+    originalPattern:
+      /e\.n=1,\(0,(ru|su)\.waitForDecoderRelease\)\(\);case 1:return e\.p=1/,
     patched:
-      'e.n=1,("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?Promise.resolve():(0,ru.waitForDecoderRelease)());case 1:return e.p=1'
+      'e.n=1,("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?Promise.resolve():(0,$1.waitForDecoderRelease)());case 1:return e.p=1',
+    patchedPattern:
+      /e\.n=1,\("undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,(?:ru|su)\.waitForDecoderRelease\)\(\)\);case 1:return e\.p=1/
   },
   {
     file: "app/chunk.448.js",
     name: "reset player controls timer on TizenBrew remote input",
+    optional: true,
     original:
       "var t=e.key||e.keyCode;if(!$i(e)){if(415===e.keyCode)return",
     patched:
@@ -141,11 +147,22 @@ const patches = [
   },
   {
     file: "app/chunk.448.js",
-    name: "recognize Samsung Back key in HTML5 player",
+    name: "handle TizenBrew MediaPlayPause in Moonfin 2.7 player",
+    optional: true,
     original:
-      'if("GoBack"===t||"Backspace"===t||461===e.keyCode||8===e.keyCode||27===e.keyCode)return e.preventDefault(),e.stopPropagation(),ot?void yn():it?void Gi():void fn();',
+      "var t=e.key||e.keyCode;if(!li(e))if(415!==e.keyCode){",
     patched:
-      'if("GoBack"===t||"Back"===t||"BrowserBack"===t||"Backspace"===t||10009===e.keyCode||461===e.keyCode||8===e.keyCode||27===e.keyCode)return e.preventDefault(),e.stopPropagation(),ot?void yn():it?void Gi():void fn();'
+      "var t=e.key||e.keyCode;if(!li(e))if(10252===e.keyCode)return e.preventDefault(),e.stopPropagation(),qn(),_r.current?void(_r.current.paused?_r.current.play():_r.current.pause()):void 0;else if(415!==e.keyCode){"
+  },
+  {
+    file: "app/chunk.448.js",
+    name: "recognize Samsung Back key in HTML5 player",
+    originalPattern:
+      /if\("GoBack"===t\|\|"Backspace"===t\|\|461===e\.keyCode\|\|8===e\.keyCode\|\|27===e\.keyCode\)return/,
+    patched:
+      'if("GoBack"===t||"Back"===t||"BrowserBack"===t||"Backspace"===t||10009===e.keyCode||461===e.keyCode||8===e.keyCode||27===e.keyCode)return',
+    patchedPattern:
+      /if\("GoBack"===t\|\|"Back"===t\|\|"BrowserBack"===t\|\|"Backspace"===t\|\|10009===e\.keyCode\|\|461===e\.keyCode\|\|8===e\.keyCode\|\|27===e\.keyCode\)return/
   },
   {
     file: "app/chunk.448.js",
@@ -159,14 +176,25 @@ const patches = [
   {
     file: "app/chunk.448.js",
     name: "prefer TV decode with HLS fallback in TizenBrew",
+    optional: true,
     original:
       "Xl.uF(v.Id,{startPositionTicks:l,maxBitrate:gt||R.maxBitrate,enableDirectPlay:!R.preferTranscode,enableDirectStream:!R.preferTranscode,forceDirectPlay:!vi&&R.forceDirectPlay,mediaSourceId:m,audioStreamIndex:null!=p?p:void 0,subtitleStreamIndex:y,item:v,isLiveTV:vi,stereoUpmixEnabled:R.stereoUpmixEnabled})",
     patched:
       'Xl.uF(v.Id,{startPositionTicks:l,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?5e7:gt||R.maxBitrate,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!vi&&R.forceDirectPlay,mediaSourceId:m,audioStreamIndex:null!=p?p:void 0,subtitleStreamIndex:y,item:v,isLiveTV:vi,stereoUpmixEnabled:R.stereoUpmixEnabled})'
   },
   {
+    file: "app/chunk.448.js",
+    name: "prefer TV decode with HLS fallback in Moonfin 2.7 player",
+    optional: true,
+    original:
+      "c={startPositionTicks:u,maxBitrate:ft||R.maxBitrate,enableDirectPlay:!R.preferTranscode,enableDirectStream:!R.preferTranscode,forceDirectPlay:!Jr&&R.forceDirectPlay,mediaSourceId:g,audioStreamIndex:null!=m?m:void 0,subtitleStreamIndex:p,item:f,isLiveTV:Jr,stereoUpmixEnabled:R.stereoUpmixEnabled}",
+    patched:
+      'c={startPositionTicks:u,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?5e7:ft||R.maxBitrate,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!Jr&&R.forceDirectPlay,mediaSourceId:g,audioStreamIndex:null!=m?m:void 0,subtitleStreamIndex:p,item:f,isLiveTV:Jr,stereoUpmixEnabled:R.stereoUpmixEnabled}'
+  },
+  {
     file: "app/main.js",
     name: "keep TizenBrew transcoding URLs as HLS",
+    optional: true,
     original:
       'if(t.TranscodingUrl){var w=t.TranscodingUrl;w=w.replace(/\\?&/g,"?").replace(/&&/g,"&"),a.stereoUpmixEnabled&&(w+=(w.includes("?")?"&":"?")+"upmix=true"),"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&!i&&(w=w.replace(/\\/master\\.m3u8/i,"/stream.mp4").replace(/([?&])TranscodingProtocol=hls/ig,"$1TranscodingProtocol=http").replace(/([?&])SegmentContainer=[^&]*/ig,"$1Container=mp4").replace(/([?&])MinSegments=[^&]*/ig,"$1").replace(/&&/g,"&"));var S=(w=w.replace(/([?&])StartTimeTicks=[^&]*&?/i,"$1").replace(/[?&]$/,"")).startsWith("http")?w:"".concat(s).concat(w);return S.includes("api_key")?S:"".concat(S,"&api_key=").concat(l)}',
     patched:
@@ -214,8 +242,11 @@ for (const patch of patches) {
   const hasOriginal = patch.originalPattern
     ? patch.originalPattern.test(source)
     : source.includes(patch.original);
+  const hasPatched = patch.patchedPattern
+    ? patch.patchedPattern.test(source)
+    : source.includes(patch.patched);
 
-  if (source.includes(patch.patched)) {
+  if (hasPatched) {
     if (!hasOriginal) {
       unchanged += 1;
       console.log(`already patched: ${patch.name}`);
