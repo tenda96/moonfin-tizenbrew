@@ -278,7 +278,14 @@ if (!fs.existsSync(cssFile)) {
 }
 
 const cssFontPattern = /url\((["']?)\/node_modules\/@enact\/sandstone\/fonts\/[^)]*?\.ttf\1\) format\("truetype"\)/g;
-const cssFontReplacement = 'url(resources/fonts/ScienceGothic-Regular.ttf) format("truetype")';
+const cssFontFile = [
+  "app/resources/fonts/ScienceGothic-Regular.ttf",
+  "app/resources/fonts/Rajdhani-Regular.ttf"
+].find((file) => fs.existsSync(file));
+if (!cssFontFile) {
+  throw new Error("no bundled local font is available for Sandstone font URLs");
+}
+const cssFontReplacement = `url(${cssFontFile.slice("app/".length)}) format("truetype")`;
 const cssSource = fs.readFileSync(cssFile, "utf8");
 const cssPatched = cssSource.replace(cssFontPattern, cssFontReplacement);
 

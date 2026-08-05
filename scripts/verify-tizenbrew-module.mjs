@@ -266,10 +266,11 @@ assert(
   !mainCss.includes("/node_modules/@enact/sandstone/fonts/"),
   "main.css must not reference absolute /node_modules font URLs"
 );
-assert(
-  mainCss.includes("resources/fonts/ScienceGothic-Regular.ttf"),
-  "main.css must reference the bundled local font fallback"
-);
+const localFontRefs = [...mainCss.matchAll(/url\(["']?(resources\/fonts\/[^)'\"]+\.ttf)/g)].map((match) => match[1]);
+assert(localFontRefs.length > 0, "main.css must reference bundled local fonts");
+for (const fontRef of new Set(localFontRefs)) {
+  assert(exists(`app/${fontRef}`), `main.css references missing local font: ${fontRef}`);
+}
 
 const workflow = readText(".github/workflows/update-moonfin.yml");
 assert(workflow.includes("node scripts/patch-moonfin-bundle.mjs"), "update workflow must apply bundle patches");
