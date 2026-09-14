@@ -1,5 +1,7 @@
 import fs from "node:fs";
 
+const TIZENBREW_REVISION = 14;
+
 function copyHelperScript(file) {
   const source = file;
   const destination = `app/${file}`;
@@ -14,13 +16,42 @@ function copyHelperScript(file) {
 function injectHelperScript(html, file) {
   if (html.includes(file)) return html;
 
-  const tag = `\t<script src="./${file}"></script>`;
+  const tag = `\t<script src="./${file}?v=tizenbrew-${TIZENBREW_REVISION}"></script>`;
 
   if (!html.includes("<head>")) {
     throw new Error("app/index.html does not contain a <head> tag");
   }
 
   return html.replace("<head>", `<head>\n${tag}`);
+}
+
+const javascriptFiles = fs
+  .readdirSync("app", { withFileTypes: true })
+  .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
+  .map((entry) => `app/${entry.name}`)
+  .sort();
+
+function patchMatches(source, patch) {
+  const hasOriginal = patch.originalPattern
+    ? patch.originalPattern.test(source)
+    : typeof patch.original === "string" && source.includes(patch.original);
+  const hasPatched = patch.patchedPattern
+    ? patch.patchedPattern.test(source)
+    : typeof patch.patched === "string" && source.includes(patch.patched);
+
+  return { hasOriginal, hasPatched };
+}
+
+function resolvePatchFile(patch) {
+  const candidates = [patch.file, ...javascriptFiles.filter((file) => file !== patch.file)];
+
+  for (const file of candidates) {
+    if (!fs.existsSync(file)) continue;
+    const matches = patchMatches(fs.readFileSync(file, "utf8"), patch);
+    if (matches.hasOriginal || matches.hasPatched) return { file, ...matches };
+  }
+
+  return null;
 }
 
 const tizenbrewTvDecodeProfilePatch =
@@ -31,15 +62,16 @@ const patches = [
     file: "app/chunk.917.js",
     name: "force HTML5 player in TizenBrew",
     originalPattern:
-      /return("tizen"===\(0,i\.uo\)\(\)\?t\.e\(\d+\)\.then\(t\.bind\(t,\d+\)\):t\.e\(448\)\.then\(t\.bind\(t,22448\)\))/,
+      /return(\(?"tizen"===\(0,([A-Za-z_$][\w$]*)\.uo\)\(\)\?([A-Za-z_$][\w$]*)\.e\(\d+\)\.then\(\3\.bind\(\3,\d+\)\):(\3\.e\(\d+\)\.then\(\3\.bind\(\3,\d+\)\))\)?)/,
     patched:
-      'return"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?t.e(448).then(t.bind(t,22448)):$1',
+      'return"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?$4:$1',
     patchedPattern:
-      /return"undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?t\.e\(448\)\.then\(t\.bind\(t,22448\)\):"tizen"===\(0,i\.uo\)\(\)\?t\.e\(\d+\)\.then\(t\.bind\(t,\d+\)\):t\.e\(448\)\.then\(t\.bind\(t,22448\)\)/
+      /return"undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?[A-Za-z_$][\w$]*\.e\(\d+\)\.then\([A-Za-z_$][\w$]*\.bind\([A-Za-z_$][\w$]*,\d+\)\):\(?"tizen"===/
   },
   {
     file: "app/main.js",
     name: "use HTML5 device profile services in TizenBrew",
+    optional: true,
     original:
       'if("tizen"!==(0,a.uo)()){e.n=3;break}return e.n=2,n.e(433).then(n.bind(n,13433));',
     patched:
@@ -47,10 +79,27 @@ const patches = [
   },
   {
     file: "app/main.js",
+    name: "use HTML5 device profile services in TizenBrew on Moonfin 2.8",
+    optional: true,
+    original:
+      'if("tizen"!==(0,a.uo)()){e.n=3;break}return e.n=2,n.e(7861).then(n.bind(n,87861));',
+    patched:
+      'if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__||"tizen"!==(0,a.uo)()){e.n=3;break}return e.n=2,n.e(7861).then(n.bind(n,87861));'
+  },
+  {
+    file: "app/main.js",
     name: "use TV decode playback profile in TizenBrew",
     optional: true,
     original:
       'case 0:return e.n=1,s();case 1:return e.a(2,r.getJellyfinDeviceProfile(n))',
+    patched: tizenbrewTvDecodeProfilePatch
+  },
+  {
+    file: "app/main.js",
+    name: "use TV decode playback profile in TizenBrew on Moonfin 2.8",
+    optional: true,
+    original:
+      'case 0:return e.n=1,u();case 1:return e.a(2,r.getJellyfinDeviceProfile(n))',
     patched: tizenbrewTvDecodeProfilePatch
   },
   {
@@ -72,6 +121,7 @@ const patches = [
   {
     file: "app/main.js",
     name: "avoid webOS profile probing during TizenBrew HLS playback",
+    optional: true,
     original:
       'case 0:return e.n=1,s();case 1:return e.a(2,"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&r.getH264FallbackProfile?r.getH264FallbackProfile(n).then(function(e){return e.Name="Moonfin TizenBrew H264 MP4",e.MaxStreamingBitrate=2e7,e.MaxStaticBitrate=2e7,e.DirectPlayProfiles=[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264",AudioCodec:"aac,mp3"},{Container:"mp3,aac,m4a",Type:"Audio"}],e.TranscodingProfiles=[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"http",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],e.ResponseProfiles=[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}],e}):r.getJellyfinDeviceProfile(n))',
     patched:
@@ -88,10 +138,20 @@ const patches = [
   {
     file: "app/main.js",
     name: "avoid webOS capability probing during TizenBrew playback",
+    optional: true,
     original:
       'case 0:return e.n=1,s();case 1:return e.a(2,(t=r).getDeviceCapabilities.apply(t,n))',
     patched:
       'case 0:if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return e.a(2,{modelName:"Samsung Smart TV",modelNameAscii:"Samsung Smart TV",serialNumber:"",sdkVersion:"TizenBrew",firmwareVersion:"",webosVersion:5,webosVersionDisplay:"TizenBrew",screenWidth:1920,screenHeight:1080,uhd:!0,uhd8K:!1,oled:!1,hdr10:!0,hdr10Plus:!1,hlg:!0,dolbyVision:!1,dolbyAtmos:!1,dts:{mkv:!1,mp4:!1,ts:!1,avi:!1},dtsBase:{mkv:!1,mp4:!1,ts:!1,avi:!1},ac3:!0,eac3:!0,truehd:!1,dtshd:!1,opus:!0,hevc:!0,av1:!1,vp9:!0,mp4:!0,m4v:!0,ts:!0,mov:!0,avi:!1,webm:!0,mkv:!1,hls:!0,nativeHls:!0,hasNativeHls:!0,nativeHlsFmp4:!1,hlsAc3:!1,hlsByteRange:!0,lunaConfig:{},ddrSize:0});return e.n=1,s();case 1:return e.a(2,(t=r).getDeviceCapabilities.apply(t,n))'
+  },
+  {
+    file: "app/main.js",
+    name: "avoid webOS capability probing during TizenBrew playback on Moonfin 2.8",
+    optional: true,
+    original:
+      'case 0:return e.n=1,u();case 1:return e.a(2,(t=r).getDeviceCapabilities.apply(t,n))',
+    patched:
+      'case 0:if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return e.a(2,{modelName:"Samsung Smart TV",modelNameAscii:"Samsung Smart TV",serialNumber:"",sdkVersion:"TizenBrew",firmwareVersion:"",webosVersion:5,webosVersionDisplay:"TizenBrew",screenWidth:1920,screenHeight:1080,uhd:!0,uhd8K:!1,oled:!1,hdr10:!0,hdr10Plus:!1,hlg:!0,dolbyVision:!1,dolbyAtmos:!1,dts:{mkv:!1,mp4:!1,ts:!1,avi:!1},dtsBase:{mkv:!1,mp4:!1,ts:!1,avi:!1},ac3:!0,eac3:!0,truehd:!1,dtshd:!1,opus:!0,hevc:!0,av1:!1,vp9:!0,mp4:!0,m4v:!0,ts:!0,mov:!0,avi:!1,webm:!0,mkv:!1,hls:!0,nativeHls:!0,hasNativeHls:!0,nativeHlsFmp4:!1,hlsAc3:!1,hlsByteRange:!0,lunaConfig:{},ddrSize:0});return e.n=1,u();case 1:return e.a(2,(t=r).getDeviceCapabilities.apply(t,n))'
   },
   {
     file: "app/main.js",
@@ -105,6 +165,7 @@ const patches = [
   {
     file: "app/main.js",
     name: "disable SyncPlay API calls in TizenBrew",
+    optional: true,
     original:
       'case 0:if(i=(0,a.Tt)()){e.n=1;break}throw new Error("No server URL");case 1:return s="".concat(i,"/SyncPlay/").concat(n),',
     patched:
@@ -112,11 +173,30 @@ const patches = [
   },
   {
     file: "app/main.js",
+    name: "disable SyncPlay API calls in TizenBrew on Moonfin 2.8",
+    optional: true,
+    original:
+      'case 0:if(i=(0,a.Tt)()){e.n=1;break}throw new Error("No server URL");case 1:return u="".concat(i,"/SyncPlay/").concat(n),',
+    patched:
+      'case 0:if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return e.a(2,null);if(i=(0,a.Tt)()){e.n=1;break}throw new Error("No server URL");case 1:return u="".concat(i,"/SyncPlay/").concat(n),'
+  },
+  {
+    file: "app/main.js",
     name: "use HTML5 video services in TizenBrew",
+    optional: true,
     original:
       'if("tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(325).then(n.bind(n,88325));',
     patched:
       'if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__||"tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(325).then(n.bind(n,88325));'
+  },
+  {
+    file: "app/main.js",
+    name: "use HTML5 video services in TizenBrew on Moonfin 2.8",
+    optional: true,
+    original:
+      'if("tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(5569).then(n.bind(n,75569));',
+    patched:
+      'if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__||"tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(5569).then(n.bind(n,75569));'
   },
   {
     file: "app/chunk.460.js",
@@ -130,11 +210,11 @@ const patches = [
     file: "app/chunk.448.js",
     name: "skip shared decoder wait in TizenBrew",
     originalPattern:
-      /e\.n=1,\(0,(ru|su)\.waitForDecoderRelease\)\(\);case 1:return e\.p=1/,
+      /e\.n=1,\(0,([A-Za-z_$][\w$]*)\.waitForDecoderRelease\)\(\);case 1:return e\.p=1/,
     patched:
       'e.n=1,("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?Promise.resolve():(0,$1.waitForDecoderRelease)());case 1:return e.p=1',
     patchedPattern:
-      /e\.n=1,\("undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,(?:ru|su)\.waitForDecoderRelease\)\(\)\);case 1:return e\.p=1/
+      /e\.n=1,\("undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,[A-Za-z_$][\w$]*\.waitForDecoderRelease\)\(\)\);case 1:return e\.p=1/
   },
   {
     file: "app/chunk.448.js",
@@ -153,6 +233,15 @@ const patches = [
       "var t=e.key||e.keyCode;if(!li(e))if(415!==e.keyCode){",
     patched:
       "var t=e.key||e.keyCode;if(!li(e))if(10252===e.keyCode)return e.preventDefault(),e.stopPropagation(),qn(),_r.current?void(_r.current.paused?_r.current.play():_r.current.pause()):void 0;else if(415!==e.keyCode){"
+  },
+  {
+    file: "app/chunk.448.js",
+    name: "handle TizenBrew MediaPlayPause in Moonfin 2.8 player",
+    optional: true,
+    original:
+      "var t=e.key||e.keyCode;if(!ki(e))if(415!==e.keyCode){",
+    patched:
+      "var t=e.key||e.keyCode;if(!ki(e))if(415!==e.keyCode&&10252!==e.keyCode){"
   },
   {
     file: "app/chunk.448.js",
@@ -190,6 +279,15 @@ const patches = [
       "c={startPositionTicks:u,maxBitrate:ft||R.maxBitrate,enableDirectPlay:!R.preferTranscode,enableDirectStream:!R.preferTranscode,forceDirectPlay:!Jr&&R.forceDirectPlay,mediaSourceId:g,audioStreamIndex:null!=m?m:void 0,subtitleStreamIndex:p,item:f,isLiveTV:Jr,stereoUpmixEnabled:R.stereoUpmixEnabled}",
     patched:
       'c={startPositionTicks:u,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?5e7:ft||R.maxBitrate,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!Jr&&R.forceDirectPlay,mediaSourceId:g,audioStreamIndex:null!=m?m:void 0,subtitleStreamIndex:p,item:f,isLiveTV:Jr,stereoUpmixEnabled:R.stereoUpmixEnabled}'
+  },
+  {
+    file: "app/chunk.448.js",
+    name: "prefer TV decode with HLS fallback in Moonfin 2.8 player",
+    optional: true,
+    original:
+      "E={startPositionTicks:k,maxBitrate:At||D.maxBitrate,enableDirectPlay:!T&&!D.preferTranscode,enableDirectStream:!T&&!D.preferTranscode,forceDirectPlay:!un&&!T&&D.forceDirectPlay,mediaSourceId:g,audioStreamIndex:null!=m?m:void 0,subtitleStreamIndex:p,item:f,isLiveTV:un,stereoUpmixEnabled:D.stereoUpmixEnabled}",
+    patched:
+      'E={startPositionTicks:k,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?5e7:At||D.maxBitrate,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!T&&!D.preferTranscode,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!T&&!D.preferTranscode,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!un&&!T&&D.forceDirectPlay,mediaSourceId:g,audioStreamIndex:null!=m?m:void 0,subtitleStreamIndex:p,item:f,isLiveTV:un,stereoUpmixEnabled:D.stereoUpmixEnabled}'
   },
   {
     file: "app/main.js",
@@ -234,17 +332,20 @@ if (indexSource === indexPatched) {
 }
 
 for (const patch of patches) {
-  if (!fs.existsSync(patch.file)) {
-    throw new Error(`${patch.name}: ${patch.file} not found`);
+  const resolved = resolvePatchFile(patch);
+
+  if (!resolved && patch.optional) {
+    unchanged += 1;
+    console.log(`not needed: ${patch.name}`);
+    continue;
   }
 
-  const source = fs.readFileSync(patch.file, "utf8");
-  const hasOriginal = patch.originalPattern
-    ? patch.originalPattern.test(source)
-    : source.includes(patch.original);
-  const hasPatched = patch.patchedPattern
-    ? patch.patchedPattern.test(source)
-    : source.includes(patch.patched);
+  if (!resolved) {
+    throw new Error(`${patch.name}: expected bundle file or pattern was not found`);
+  }
+
+  const { file, hasOriginal, hasPatched } = resolved;
+  const source = fs.readFileSync(file, "utf8");
 
   if (hasPatched) {
     if (!hasOriginal) {
@@ -267,9 +368,9 @@ for (const patch of patches) {
   const patchedSource = patch.originalPattern
     ? source.replace(patch.originalPattern, patch.patched)
     : source.replaceAll(patch.original, patch.patched);
-  fs.writeFileSync(patch.file, patchedSource);
+  fs.writeFileSync(file, patchedSource);
   applied += 1;
-  console.log(`patched: ${patch.name}`);
+  console.log(`patched: ${patch.name} (${file})`);
 }
 
 const cssFile = "app/main.css";

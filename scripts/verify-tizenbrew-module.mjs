@@ -5,11 +5,25 @@ import vm from "node:vm";
 const root = process.cwd();
 const readText = (file) => fs.readFileSync(path.join(root, file), "utf8");
 const exists = (file) => fs.existsSync(path.join(root, file));
+const javascriptBundles = fs
+  .readdirSync(path.join(root, "app"), { withFileTypes: true })
+  .filter((entry) => entry.isFile() && entry.name.endsWith(".js"))
+  .map((entry) => `app/${entry.name}`)
+  .sort();
 
 function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+function readBundleMatching(pattern, description) {
+  for (const file of javascriptBundles) {
+    const source = readText(file);
+    if (pattern.test(source)) return { file, source };
+  }
+
+  throw new Error(`could not find ${description} bundle`);
 }
 
 function findLocalAssetRefs(html) {
@@ -166,26 +180,32 @@ assert(windowRef.webapis.systeminfo.isSupportedAudioCodec("AC3") === true, "adap
 assert(windowRef.webapis.systeminfo.isSupportedAudioCodec("TrueHD") === false, "adapter must not advertise TrueHD support");
 assert(!("avplay" in windowRef.webapis), "adapter must not fake native AVPlay");
 
-const playerChunk = readText("app/chunk.917.js");
-assert(playerChunk.includes("window.__MOONFIN_TIZENBREW__?t.e(448)"), "player chunk must force HTML5 player in TizenBrew");
+const playerChunk = readBundleMatching(
+  /return"undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?[A-Za-z_$][\w$]*\.e\(\d+\)\.then/,
+  "player loader"
+).source;
+assert(playerChunk.includes("window.__MOONFIN_TIZENBREW__?"), "player chunk must force HTML5 player in TizenBrew");
 
-const smartHubChunk = readText("app/chunk.460.js");
+const smartHubChunk = readBundleMatching(/\[SmartHub\] Disabled in TizenBrew/, "SmartHub").source;
 assert(
   smartHubChunk.includes('window.__MOONFIN_TIZENBREW__)return void u.log("[SmartHub] Disabled in TizenBrew")'),
   "SmartHub updater must be disabled in TizenBrew"
 );
 
-const html5PlayerChunk = readText("app/chunk.448.js");
+const html5PlayerChunk = readBundleMatching(
+  /window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,[A-Za-z_$][\w$]*\.waitForDecoderRelease\)\(\)/,
+  "HTML5 player"
+).source;
 assert(
-  /window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,(?:ru|su)\.waitForDecoderRelease\)\(\)/.test(html5PlayerChunk),
+  /window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,[A-Za-z_$][\w$]*\.waitForDecoderRelease\)\(\)/.test(html5PlayerChunk),
   "HTML5 player must skip shared decoder wait in TizenBrew"
 );
 assert(
-  html5PlayerChunk.includes('enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode'),
+  /enableDirectPlay:"undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?!0:/.test(html5PlayerChunk),
   "HTML5 player must prefer TV DirectPlay in TizenBrew playback requests"
 );
 assert(
-  html5PlayerChunk.includes('enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!R.preferTranscode'),
+  /enableDirectStream:"undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?!0:/.test(html5PlayerChunk),
   "HTML5 player must prefer TV DirectStream in TizenBrew playback requests"
 );
 assert(
@@ -201,19 +221,19 @@ assert(
   "HTML5 player must recognize Samsung/Tizen Back key names"
 );
 assert(
-  html5PlayerChunk.includes('10252===e.keyCode'),
+  /10252(?:===|!==)e\.keyCode/.test(html5PlayerChunk),
   "HTML5 player must handle Samsung/Tizen MediaPlayPause"
 );
 const resetsControlsOnRemoteNavigation =
   html5PlayerChunk.includes('("ArrowUp"===t||"ArrowDown"===t||"ArrowLeft"===t||"ArrowRight"===t') ||
   (html5PlayerChunk.includes('if("ArrowLeft"===t||37===e.keyCode||"ArrowRight"===t||39===e.keyCode){if(e.preventDefault()') &&
-    html5PlayerChunk.includes('if("ArrowUp"===t||38===e.keyCode)return e.preventDefault(),qn()') &&
-    html5PlayerChunk.includes('if("ArrowDown"===t||40===e.keyCode)return e.preventDefault(),qn()'));
+    /if\("ArrowUp"===t\|\|38===e\.keyCode\)return e\.preventDefault\(\),[A-Za-z_$][\w$]*\(\)/.test(html5PlayerChunk) &&
+    /if\("ArrowDown"===t\|\|40===e\.keyCode\)return e\.preventDefault\(\),[A-Za-z_$][\w$]*\(\)/.test(html5PlayerChunk));
 assert(resetsControlsOnRemoteNavigation, "HTML5 player must reset the controls timeout on remote navigation");
 
 const mainBundle = readText("app/main.js");
 assert(
-  mainBundle.includes('window.__MOONFIN_TIZENBREW__||"tizen"!==(0,a.uo)()){e.n=3;break}return e.n=2,n.e(433)'),
+  /window\.__MOONFIN_TIZENBREW__\|\|"tizen"!==\(0,[A-Za-z_$][\w$]*\.uo\)\(\)\)\{e\.n=3;break\}return e\.n=2,[A-Za-z_$][\w$]*\.e\(\d+\)/.test(mainBundle),
   "main bundle must route device profile services away from Tizen in TizenBrew"
 );
 assert(
@@ -257,7 +277,7 @@ assert(
   "main bundle must disable SyncPlay API calls in TizenBrew"
 );
 assert(
-  mainBundle.includes('window.__MOONFIN_TIZENBREW__||"tizen"!==(0,a.uo)()){e.n=2;break}return e.n=1,n.e(325)'),
+  /window\.__MOONFIN_TIZENBREW__\|\|"tizen"!==\(0,[A-Za-z_$][\w$]*\.uo\)\(\)\)\{e\.n=2;break\}return e\.n=1,[A-Za-z_$][\w$]*\.e\(\d+\)/.test(mainBundle),
   "main bundle must route video services away from native Tizen in TizenBrew"
 );
 
