@@ -245,6 +245,16 @@ const patches = [
   },
   {
     file: "app/chunk.448.js",
+    name: "handle TizenBrew MediaPlayPause in minified player bundles",
+    originalPattern:
+      /var ([A-Za-z_$][\w$]*)=([A-Za-z_$][\w$]*)\.key\|\|\2\.keyCode;if\(([^;]{1,160})\)if\(415!==\2\.keyCode\)\{/,
+    patched:
+      "var $1=$2.key||$2.keyCode;if($3)if(415!==$2.keyCode&&10252!==$2.keyCode){",
+    patchedPattern:
+      /10252(?:===|!==)[A-Za-z_$][\w$]*\.keyCode/
+  },
+  {
+    file: "app/chunk.448.js",
     name: "recognize Samsung Back key in HTML5 player",
     originalPattern:
       /if\("GoBack"===t\|\|"Backspace"===t\|\|461===e\.keyCode\|\|8===e\.keyCode\|\|27===e\.keyCode\)return/,
@@ -288,6 +298,16 @@ const patches = [
       "E={startPositionTicks:k,maxBitrate:At||D.maxBitrate,enableDirectPlay:!T&&!D.preferTranscode,enableDirectStream:!T&&!D.preferTranscode,forceDirectPlay:!un&&!T&&D.forceDirectPlay,mediaSourceId:g,audioStreamIndex:null!=m?m:void 0,subtitleStreamIndex:p,item:f,isLiveTV:un,stereoUpmixEnabled:D.stereoUpmixEnabled}",
     patched:
       'E={startPositionTicks:k,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?5e7:At||D.maxBitrate,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!T&&!D.preferTranscode,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:!T&&!D.preferTranscode,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:!un&&!T&&D.forceDirectPlay,mediaSourceId:g,audioStreamIndex:null!=m?m:void 0,subtitleStreamIndex:p,item:f,isLiveTV:un,stereoUpmixEnabled:D.stereoUpmixEnabled}'
+  },
+  {
+    file: "app/chunk.448.js",
+    name: "prefer TV decode with HLS fallback in minified player bundles",
+    originalPattern:
+      /(?<target>[A-Za-z_$][\w$]*)=\{startPositionTicks:(?<start>[^,{}]+),maxBitrate:(?!"undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__)(?<max>[^,{}]+),enableDirectPlay:(?<directPlay>[^,{}]+),enableDirectStream:(?<directStream>[^,{}]+),forceDirectPlay:(?<force>[^,{}]+),mediaSourceId:(?<source>[^,{}]+),audioStreamIndex:(?<audio>[^,{}]+),subtitleStreamIndex:(?<subtitle>[^,{}]+),item:(?<item>[^,{}]+),isLiveTV:(?<live>[^,{}]+),stereoUpmixEnabled:(?<upmix>[^,{}]+)\}/,
+    patched:
+      '$<target>={startPositionTicks:$<start>,maxBitrate:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?5e7:$<max>,enableDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:$<directPlay>,enableDirectStream:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!0:$<directStream>,enableTranscoding:!0,forceDirectPlay:"undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?!1:$<force>,mediaSourceId:$<source>,audioStreamIndex:$<audio>,subtitleStreamIndex:$<subtitle>,item:$<item>,isLiveTV:$<live>,stereoUpmixEnabled:$<upmix>}',
+    patchedPattern:
+      /enableDirectPlay:"undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?!0:/
   },
   {
     file: "app/main.js",

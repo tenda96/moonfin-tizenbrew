@@ -229,7 +229,22 @@ const resetsControlsOnRemoteNavigation =
   (html5PlayerChunk.includes('if("ArrowLeft"===t||37===e.keyCode||"ArrowRight"===t||39===e.keyCode){if(e.preventDefault()') &&
     /if\("ArrowUp"===t\|\|38===e\.keyCode\)return e\.preventDefault\(\),[A-Za-z_$][\w$]*\(\)/.test(html5PlayerChunk) &&
     /if\("ArrowDown"===t\|\|40===e\.keyCode\)return e\.preventDefault\(\),[A-Za-z_$][\w$]*\(\)/.test(html5PlayerChunk));
-assert(resetsControlsOnRemoteNavigation, "HTML5 player must reset the controls timeout on remote navigation");
+const modernNavigationReset = html5PlayerChunk.match(
+  /if\(([A-Za-z_$][\w$]*)\(\),"ArrowUp"===t\|\|38===e\.keyCode\)/
+);
+const modernResetFunction = modernNavigationReset?.[1];
+const modernLeftRightReset = modernResetFunction
+  ? new RegExp(
+      `"ArrowLeft"===t\\|\\|37===e\\.keyCode\\|\\|"ArrowRight"===t\\|\\|39===e\\.keyCode[\\s\\S]{0,600}${modernResetFunction}\\(\\)`
+    ).test(html5PlayerChunk)
+  : false;
+const modernDownNavigation = /if\("ArrowDown"===t\|\|40===e\.keyCode\)return e\.preventDefault\(\)/.test(
+  html5PlayerChunk
+);
+assert(
+  resetsControlsOnRemoteNavigation || (modernLeftRightReset && modernDownNavigation),
+  "HTML5 player must reset the controls timeout on remote navigation"
+);
 
 const mainBundle = readText("app/main.js");
 assert(
