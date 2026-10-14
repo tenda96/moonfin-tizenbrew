@@ -9,6 +9,109 @@
   const localStorageRef = window.localStorage || null;
 
   window.__MOONFIN_TIZENBREW__ = true;
+  window.__MOONFIN_TIZENBREW_PROFILE__ = {
+    Name: "Moonfin TizenBrew TV Decode",
+    MaxStreamingBitrate: 50000000,
+    MaxStaticBitrate: 50000000,
+    MaxStaticMusicBitrate: 40000000,
+    MusicStreamingTranscodingBitrate: 384000,
+    DirectPlayProfiles: [
+      {
+        Container: "mp4,m4v",
+        Type: "Video",
+        VideoCodec: "h264,hevc,h265",
+        AudioCodec: "aac,mp3,ac3,eac3"
+      },
+      {
+        Container: "webm",
+        Type: "Video",
+        VideoCodec: "vp8,vp9",
+        AudioCodec: "vorbis,opus"
+      },
+      { Container: "mp3,aac,m4a,flac", Type: "Audio" }
+    ],
+    TranscodingProfiles: [
+      {
+        Container: "ts",
+        Type: "Video",
+        AudioCodec: "aac",
+        VideoCodec: "h264",
+        Context: "Streaming",
+        Protocol: "hls",
+        MaxAudioChannels: "2",
+        MinSegments: "2",
+        SegmentLength: "5",
+        BreakOnNonKeyFrames: false
+      },
+      {
+        Container: "mp4",
+        Type: "Video",
+        AudioCodec: "aac",
+        VideoCodec: "h264",
+        Context: "Static"
+      },
+      { Container: "mp3", Type: "Audio", AudioCodec: "mp3", Context: "Streaming", Protocol: "http" },
+      { Container: "aac", Type: "Audio", AudioCodec: "aac", Context: "Streaming", Protocol: "http" }
+    ],
+    CodecProfiles: [],
+    SubtitleProfiles: [
+      { Format: "vtt", Method: "External" },
+      { Format: "srt", Method: "External" },
+      { Format: "ass", Method: "External" },
+      { Format: "ssa", Method: "External" },
+      { Format: "sub", Method: "Encode" },
+      { Format: "smi", Method: "Encode" },
+      { Format: "ttml", Method: "External" },
+      { Format: "pgssub", Method: "External" },
+      { Format: "dvdsub", Method: "External" },
+      { Format: "dvbsub", Method: "External" }
+    ],
+    ResponseProfiles: [{ Type: "Video", Container: "m4v", MimeType: "video/mp4" }]
+  };
+  window.__MOONFIN_TIZENBREW_CAPABILITIES__ = {
+    modelName: "Samsung Smart TV",
+    modelNameAscii: "Samsung Smart TV",
+    serialNumber: "",
+    sdkVersion: "TizenBrew",
+    firmwareVersion: "",
+    webosVersion: 5,
+    webosVersionDisplay: "TizenBrew",
+    screenWidth: screenRef.width || window.innerWidth || 1920,
+    screenHeight: screenRef.height || window.innerHeight || 1080,
+    uhd: true,
+    uhd8K: false,
+    oled: false,
+    hdr10: true,
+    hdr10Plus: false,
+    hlg: true,
+    dolbyVision: false,
+    dolbyAtmos: true,
+    dts: { mkv: false, mp4: false, ts: false, avi: false },
+    dtsBase: { mkv: false, mp4: false, ts: false, avi: false },
+    ac3: true,
+    eac3: true,
+    truehd: false,
+    dtshd: false,
+    opus: true,
+    hevc: true,
+    av1: false,
+    vp9: true,
+    mp4: true,
+    m4v: true,
+    ts: true,
+    mov: true,
+    avi: false,
+    webm: true,
+    mkv: false,
+    hls: true,
+    nativeHls: true,
+    hasNativeHls: true,
+    nativeHlsFmp4: false,
+    hlsAc3: true,
+    hlsByteRange: true,
+    lunaConfig: {},
+    ddrSize: 0
+  };
 
   function defineMissing(target, values) {
     Object.keys(values).forEach(function (key) {

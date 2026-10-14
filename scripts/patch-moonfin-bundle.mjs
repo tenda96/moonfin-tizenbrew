@@ -1,6 +1,6 @@
 import fs from "node:fs";
 
-const TIZENBREW_REVISION = 14;
+const TIZENBREW_REVISION = 15;
 
 function copyHelperScript(file) {
   const source = file;
@@ -70,6 +70,37 @@ const patches = [
   },
   {
     file: "app/main.js",
+    name: "use stable TizenBrew playback profile",
+    originalPattern:
+      /case 0:return ([A-Za-z_$][\w$]*)\.n=1,([A-Za-z_$][\w$]*)\(\);case 1:(?=(?:return \1\.a\(2,[A-Za-z_$][\w$]*\.getJellyfinDeviceProfile\([A-Za-z_$][\w$]*\)\)|return [A-Za-z_$][\w$]*=[A-Za-z_$][\w$]*,\1\.n=\d+,[A-Za-z_$][\w$]*\.getJellyfinDeviceProfile\([A-Za-z_$][\w$]*\)))/,
+    patched:
+      'case 0:if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return $1.a(2,window.__MOONFIN_TIZENBREW_PROFILE__);return $1.n=1,$2();case 1:',
+    patchedPattern:
+      /window\.__MOONFIN_TIZENBREW__\)return [A-Za-z_$][\w$]*\.a\(2,(?:window\.__MOONFIN_TIZENBREW_PROFILE__|\{Name:"Moonfin TizenBrew TV Decode")/
+  },
+  {
+    file: "app/main.js",
+    name: "use stable TizenBrew playback capabilities",
+    originalPattern:
+      /case 0:return ([A-Za-z_$][\w$]*)\.n=1,([A-Za-z_$][\w$]*)\(\);case 1:return \1\.a\(2,\(([A-Za-z_$][\w$]*)=([A-Za-z_$][\w$]*)\)\.getDeviceCapabilities\.apply\(\3,([A-Za-z_$][\w$]*)\)\)/,
+    patched:
+      'case 0:if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return $1.a(2,window.__MOONFIN_TIZENBREW_CAPABILITIES__);return $1.n=1,$2();case 1:return $1.a(2,($3=$4).getDeviceCapabilities.apply($3,$5))',
+    patchedPattern:
+      /window\.__MOONFIN_TIZENBREW__\)return [A-Za-z_$][\w$]*\.a\(2,(?:window\.__MOONFIN_TIZENBREW_CAPABILITIES__|\{modelName:"Samsung Smart TV")/
+  },
+  {
+    file: "app/main.js",
+    name: "route modular video services to HTML5 in TizenBrew",
+    optional: true,
+    originalPattern:
+      /([A-Za-z_$][\w$]*)=function\(([A-Za-z_$][\w$]*)\)\{var ([A-Za-z_$][\w$]*)=([A-Za-z_$][\w$]*)\[\2\];return \3\?\(\3\[\(0,([A-Za-z_$][\w$]*)\.uo\)\(\)\]\|\|\3\.webos\)\(\):Promise\.reject\(new Error\("No platform module named "\.concat\(\2\)\)\)\}/,
+    patched:
+      '$1=function($2){var $3=$4[$2],__tbPlatform="undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__&&"video"===$2?"webos":(0,$5.uo)();return $3?($3[__tbPlatform]||$3.webos)():Promise.reject(new Error("No platform module named ".concat($2)))}',
+    patchedPattern:
+      /__tbPlatform="undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__&&"video"===/
+  },
+  {
+    file: "app/main.js",
     name: "use HTML5 device profile services in TizenBrew",
     optional: true,
     original:
@@ -130,6 +161,7 @@ const patches = [
   {
     file: "app/main.js",
     name: "migrate static TizenBrew playback profile from MP4 to HLS",
+    optional: true,
     original:
       'case 0:if("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__)return e.a(2,{Name:"Moonfin TizenBrew H264 MP4",MaxStreamingBitrate:5e7,MaxStaticBitrate:5e7,MaxStaticMusicBitrate:4e7,MusicStreamingTranscodingBitrate:384e3,DirectPlayProfiles:[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264,hevc,h265",AudioCodec:"aac,mp3,ac3,eac3"},{Container:"webm",Type:"Video",VideoCodec:"vp8,vp9",AudioCodec:"vorbis,opus"},{Container:"mp3,aac,m4a,flac",Type:"Audio"}],TranscodingProfiles:[{Container:"mp4",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"http",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls",MaxAudioChannels:"2",MinSegments:"1",SegmentLength:"3",BreakOnNonKeyFrames:!1},{Container:"mp3",Type:"Audio",AudioCodec:"mp3",Context:"Streaming",Protocol:"http"},{Container:"aac",Type:"Audio",AudioCodec:"aac",Context:"Streaming",Protocol:"http"}],CodecProfiles:[],SubtitleProfiles:[{Format:"vtt",Method:"External"},{Format:"srt",Method:"External"},{Format:"ass",Method:"External"},{Format:"ssa",Method:"External"},{Format:"sub",Method:"Encode"},{Format:"smi",Method:"Encode"},{Format:"ttml",Method:"External"},{Format:"pgssub",Method:"External"},{Format:"dvdsub",Method:"External"},{Format:"dvbsub",Method:"External"}],ResponseProfiles:[{Type:"Video",Container:"m4v",MimeType:"video/mp4"}]});return e.n=1,s();case 1:return e.a(2,r.getJellyfinDeviceProfile(n))',
     patched:
@@ -210,11 +242,11 @@ const patches = [
     file: "app/chunk.448.js",
     name: "skip shared decoder wait in TizenBrew",
     originalPattern:
-      /e\.n=1,\(0,([A-Za-z_$][\w$]*)\.waitForDecoderRelease\)\(\);case 1:return e\.p=1/,
+      /e\.n=1,\(0,([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)\)\(\);case 1:return e\.p=1,(?=[\s\S]{0,800}PlaybackPositionTicks)/,
     patched:
-      'e.n=1,("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?Promise.resolve():(0,$1.waitForDecoderRelease)());case 1:return e.p=1',
+      'e.n=1,("undefined"!==typeof window&&window.__MOONFIN_TIZENBREW__?Promise.resolve():(0,$1.$2)());case 1:return e.p=1,',
     patchedPattern:
-      /e\.n=1,\("undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,[A-Za-z_$][\w$]*\.waitForDecoderRelease\)\(\)\);case 1:return e\.p=1/
+      /e\.n=1,\("undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,[A-Za-z_$][\w$]*\.[A-Za-z_$][\w$]*\)\(\)\);case 1:return e\.p=1/
   },
   {
     file: "app/chunk.448.js",
@@ -246,6 +278,7 @@ const patches = [
   {
     file: "app/chunk.448.js",
     name: "handle TizenBrew MediaPlayPause in minified player bundles",
+    optional: true,
     originalPattern:
       /var ([A-Za-z_$][\w$]*)=([A-Za-z_$][\w$]*)\.key\|\|\2\.keyCode;if\(([^;]{1,160})\)if\(415!==\2\.keyCode\)\{/,
     patched:
@@ -256,6 +289,7 @@ const patches = [
   {
     file: "app/chunk.448.js",
     name: "recognize Samsung Back key in HTML5 player",
+    optional: true,
     originalPattern:
       /if\("GoBack"===t\|\|"Backspace"===t\|\|461===e\.keyCode\|\|8===e\.keyCode\|\|27===e\.keyCode\)return/,
     patched:

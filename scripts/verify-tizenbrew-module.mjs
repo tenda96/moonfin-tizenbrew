@@ -37,7 +37,7 @@ function findLocalAssetRefs(html) {
     let match;
     while ((match = pattern.exec(html))) {
       const ref = match[1];
-      if (/^(?:https?:|data:|#)/i.test(ref)) continue;
+      if (/^(?:https?:|data:|#|\$[A-Z_]+\/)/i.test(ref)) continue;
       refs.push(ref);
     }
   }
@@ -155,6 +155,24 @@ assert(rootDiagnostics.includes("red blocked to avoid overlapping debug panels")
 
 const windowRef = evaluateAdapter(appAdapter);
 assert(windowRef.__MOONFIN_TIZENBREW__ === true, "adapter must set __MOONFIN_TIZENBREW__");
+assert(
+  windowRef.__MOONFIN_TIZENBREW_PROFILE__?.Name === "Moonfin TizenBrew TV Decode",
+  "adapter must expose the TizenBrew playback profile"
+);
+assert(
+  windowRef.__MOONFIN_TIZENBREW_PROFILE__?.TranscodingProfiles?.some(
+    (profile) => profile.Type === "Video" && profile.Protocol === "hls" && profile.Container === "ts"
+  ),
+  "adapter playback profile must provide HLS/TS transcoding"
+);
+assert(
+  windowRef.__MOONFIN_TIZENBREW_PROFILE__?.DirectPlayProfiles?.some(
+    (profile) => profile.Type === "Video" && profile.Container.includes("mp4") && profile.VideoCodec.includes("h264")
+  ),
+  "adapter playback profile must advertise H.264 MP4 DirectPlay"
+);
+assert(windowRef.__MOONFIN_TIZENBREW_CAPABILITIES__?.hls === true, "adapter must advertise HLS support");
+assert(windowRef.__MOONFIN_TIZENBREW_CAPABILITIES__?.hevc === true, "adapter must advertise HEVC support");
 assert(typeof windowRef.tizen.application.getCurrentApplication === "function", "adapter must expose tizen.application");
 assert(windowRef.tizen.application.getCurrentApplication().appInfo.name === "Moonfin", "adapter appInfo name mismatch");
 assert(typeof windowRef.tizen.ApplicationControl === "function", "adapter must expose ApplicationControl constructor");
@@ -180,6 +198,7 @@ assert(windowRef.webapis.systeminfo.isSupportedAudioCodec("AC3") === true, "adap
 assert(windowRef.webapis.systeminfo.isSupportedAudioCodec("TrueHD") === false, "adapter must not advertise TrueHD support");
 assert(!("avplay" in windowRef.webapis), "adapter must not fake native AVPlay");
 
+const mainBundle = readText("app/main.js");
 const playerChunk = readBundleMatching(
   /return"undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__\?[A-Za-z_$][\w$]*\.e\(\d+\)\.then/,
   "player loader"
@@ -193,11 +212,13 @@ assert(
 );
 
 const html5PlayerChunk = readBundleMatching(
-  /window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,[A-Za-z_$][\w$]*\.waitForDecoderRelease\)\(\)/,
+  /window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,[A-Za-z_$][\w$]*\.[A-Za-z_$][\w$]*\)\(\)/,
   "HTML5 player"
 ).source;
 assert(
-  /window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,[A-Za-z_$][\w$]*\.waitForDecoderRelease\)\(\)/.test(html5PlayerChunk),
+  /window\.__MOONFIN_TIZENBREW__\?Promise\.resolve\(\):\(0,[A-Za-z_$][\w$]*\.[A-Za-z_$][\w$]*\)\(\)/.test(
+    html5PlayerChunk
+  ),
   "HTML5 player must skip shared decoder wait in TizenBrew"
 );
 assert(
@@ -213,15 +234,17 @@ assert(
   "HTML5 player must explicitly allow transcoding in playback requests"
 );
 assert(
-  html5PlayerChunk.includes('10009===e.keyCode'),
+  html5PlayerChunk.includes('10009===e.keyCode') ||
+    (mainBundle.includes("BACK:10009") && /return [A-Za-z_$][\w$]*===[A-Za-z_$][\w$]*\.BACK\|\|27===/.test(mainBundle)),
   "HTML5 player must recognize Samsung/Tizen Back key code"
 );
 assert(
-  html5PlayerChunk.includes('"Back"===t||"BrowserBack"===t'),
+  html5PlayerChunk.includes('"Back"===t||"BrowserBack"===t') || mainBundle.includes("BACK:10009"),
   "HTML5 player must recognize Samsung/Tizen Back key names"
 );
 assert(
-  /10252(?:===|!==)e\.keyCode/.test(html5PlayerChunk),
+  /10252(?:===|!==)e\.keyCode/.test(html5PlayerChunk) ||
+    (mainBundle.includes("PLAY_PAUSE:10252") && /\.Rk\.PLAY_PAUSE/.test(html5PlayerChunk)),
   "HTML5 player must handle Samsung/Tizen MediaPlayPause"
 );
 const resetsControlsOnRemoteNavigation =
@@ -246,34 +269,56 @@ assert(
   "HTML5 player must reset the controls timeout on remote navigation"
 );
 
-const mainBundle = readText("app/main.js");
+const hasStableProfileHook =
+  /window\.__MOONFIN_TIZENBREW__\)return [A-Za-z_$][\w$]*\.a\(2,window\.__MOONFIN_TIZENBREW_PROFILE__\)/.test(
+    mainBundle
+  );
+const hasLegacyEmbeddedProfile = mainBundle.includes(
+  'window.__MOONFIN_TIZENBREW__)return e.a(2,{Name:"Moonfin TizenBrew TV Decode"'
+);
+const hasStableCapabilitiesHook =
+  /window\.__MOONFIN_TIZENBREW__\)return [A-Za-z_$][\w$]*\.a\(2,window\.__MOONFIN_TIZENBREW_CAPABILITIES__\)/.test(
+    mainBundle
+  );
+const hasLegacyEmbeddedCapabilities = mainBundle.includes(
+  'window.__MOONFIN_TIZENBREW__)return e.a(2,{modelName:"Samsung Smart TV"'
+);
+const hasLegacyDeviceProfileRouting =
+  /window\.__MOONFIN_TIZENBREW__\|\|"tizen"!==\(0,[A-Za-z_$][\w$]*\.uo\)\(\)\)\{e\.n=3;break\}return e\.n=2,[A-Za-z_$][\w$]*\.e\(\d+\)/.test(
+    mainBundle
+  );
+const hasModularVideoRouting =
+  /__tbPlatform="undefined"!==typeof window&&window\.__MOONFIN_TIZENBREW__&&"video"===/.test(mainBundle);
 assert(
-  /window\.__MOONFIN_TIZENBREW__\|\|"tizen"!==\(0,[A-Za-z_$][\w$]*\.uo\)\(\)\)\{e\.n=3;break\}return e\.n=2,[A-Za-z_$][\w$]*\.e\(\d+\)/.test(mainBundle),
-  "main bundle must route device profile services away from Tizen in TizenBrew"
+  hasStableProfileHook || hasLegacyEmbeddedProfile,
+  "main bundle must bypass native device profile probing in TizenBrew"
 );
 assert(
-  mainBundle.includes('window.__MOONFIN_TIZENBREW__)return e.a(2,{Name:"Moonfin TizenBrew TV Decode"'),
-  "main bundle must use a static TV decode playback profile in TizenBrew"
+  hasStableCapabilitiesHook || hasLegacyEmbeddedCapabilities,
+  "main bundle must bypass native capability probing in TizenBrew"
 );
 assert(
-  mainBundle.includes('Name:"Moonfin TizenBrew TV Decode"'),
-  "main bundle must label the TizenBrew playback profile"
+  hasStableProfileHook || mainBundle.includes('Name:"Moonfin TizenBrew TV Decode"'),
+  "main bundle must select the TizenBrew playback profile"
 );
 assert(
-  mainBundle.includes('DirectPlayProfiles:[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264,hevc,h265",AudioCodec:"aac,mp3,ac3,eac3"}'),
-  "main bundle must advertise common Samsung TV MP4 codecs for DirectPlay"
+  hasStableProfileHook ||
+    mainBundle.includes(
+      'DirectPlayProfiles:[{Container:"mp4,m4v",Type:"Video",VideoCodec:"h264,hevc,h265",AudioCodec:"aac,mp3,ac3,eac3"}'
+    ),
+  "main bundle or adapter must provide common Samsung TV MP4 codecs for DirectPlay"
 );
 assert(
-  mainBundle.includes('{Container:"webm",Type:"Video",VideoCodec:"vp8,vp9",AudioCodec:"vorbis,opus"}'),
-  "main bundle must advertise WebM/VP9 DirectPlay for compatible Samsung TVs"
+  hasStableProfileHook ||
+    mainBundle.includes('{Container:"webm",Type:"Video",VideoCodec:"vp8,vp9",AudioCodec:"vorbis,opus"}'),
+  "main bundle or adapter must provide WebM/VP9 DirectPlay for compatible Samsung TVs"
 );
 assert(
-  mainBundle.includes('TranscodingProfiles:[{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls"'),
-  "main bundle must prefer HLS TS transcoding in TizenBrew"
-);
-assert(
-  mainBundle.includes('window.__MOONFIN_TIZENBREW__)return e.a(2,{modelName:"Samsung Smart TV"'),
-  "main bundle must use static TizenBrew playback capabilities without webOS probing"
+  hasStableProfileHook ||
+    mainBundle.includes(
+      'TranscodingProfiles:[{Container:"ts",Type:"Video",AudioCodec:"aac",VideoCodec:"h264",Context:"Streaming",Protocol:"hls"'
+    ),
+  "main bundle or adapter must prefer HLS TS transcoding in TizenBrew"
 );
 assert(
   !mainBundle.includes('w=w.replace(/\\/master\\.m3u8/i,"/stream.mp4")'),
@@ -292,8 +337,15 @@ assert(
   "main bundle must disable SyncPlay API calls in TizenBrew"
 );
 assert(
-  /window\.__MOONFIN_TIZENBREW__\|\|"tizen"!==\(0,[A-Za-z_$][\w$]*\.uo\)\(\)\)\{e\.n=2;break\}return e\.n=1,[A-Za-z_$][\w$]*\.e\(\d+\)/.test(mainBundle),
+  hasModularVideoRouting ||
+    /window\.__MOONFIN_TIZENBREW__\|\|"tizen"!==\(0,[A-Za-z_$][\w$]*\.uo\)\(\)\)\{e\.n=2;break\}return e\.n=1,[A-Za-z_$][\w$]*\.e\(\d+\)/.test(
+      mainBundle
+    ),
   "main bundle must route video services away from native Tizen in TizenBrew"
+);
+assert(
+  hasStableProfileHook || hasLegacyDeviceProfileRouting,
+  "main bundle must isolate TizenBrew playback from native Tizen profile services"
 );
 
 const mainCss = readText("app/main.css");
