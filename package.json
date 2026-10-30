@@ -1,6 +1,6 @@
 {
   "name": "moonfin-tizenbrew",
-  "version": "2.10.15",
+  "version": "2.11.15",
   "type": "module",
   "description": "Moonfin Smart TV packaged as a TizenBrew application module",
   "packageType": "app",
